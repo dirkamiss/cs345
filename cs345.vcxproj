@@ -91,6 +91,7 @@
     <ClCompile Include="os345semaphores.c" />
     <ClCompile Include="os345signals.c" />
     <ClCompile Include="os345tasks.c" />
+    <ClCompile Include="Queue.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="os345.h" />
@@ -98,6 +99,7 @@
     <ClInclude Include="os345fat.h" />
     <ClInclude Include="os345lc3.h" />
     <ClInclude Include="os345signals.h" />
+    <ClInclude Include="Queue.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>

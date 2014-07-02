@@ -83,7 +83,7 @@ bool diskMounted;					// disk has been mounted
 time_t oldTime1;					// old 1sec time
 clock_t myClkTime;
 clock_t myOldClkTime;
-int* rq;							// ready priority queue
+PQueue* rq;							// ready priority queue
 
 
 // **********************************************************************
@@ -351,7 +351,7 @@ static int initOS()
 	diskMounted = 0;					// disk has been mounted
 
 	// malloc ready queue
-	rq = (int*)malloc(MAX_TASKS * sizeof(int));
+	rq = initQueue();
 	if (rq == NULL) return 99;
 
 	// capture current time

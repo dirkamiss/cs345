@@ -60,6 +60,9 @@ extern int lastPollClock;			// last pollClock
 
 extern int superMode;						// system mode
 
+extern TCB tcb[];
+char recallArgsv[50];
+int recallArgsc;
 
 // **********************************************************************
 // **********************************************************************
@@ -69,7 +72,7 @@ void pollInterrupts(void)
 {
 	// check for task monopoly
 	pollClock = clock();
-	assert("Timeout" && ((pollClock - lastPollClock) < MAX_CYCLES));
+	//assert("Timeout" && ((pollClock - lastPollClock) < MAX_CYCLES));
 	lastPollClock = pollClock;
 
 	// check for keyboard interrupt
@@ -103,15 +106,73 @@ static void keyboard_isr()
 			{
 				inBufIndx = 0;				// EOL, signal line ready
 				semSignal(inBufferReady);	// SIGNAL(inBufferReady)
+				strcpy(recallArgsv, inBuffer);
 				break;
 			}
 
-			case 0x18:						// ^x
+			case '\b':
+			{
+				if (inBufIndx == 0) {
+					break;
+				}
+				inBuffer[--inBufIndx] = '\0';
+				if (inBufIndx < 0) {
+					inBufIndx = 0;
+				}
+				printf("\b \b");		// echo character
+				break;
+			}
+
+			case 0x12:	//^r
+			{
+				int i;
+				sigSignal(-1, mySIGCONT);
+				for (i = 0; i < MAX_ARGS; i++)
+				{
+					tcb[i].signal &= ~mySIGTSTP;
+					tcb[i].signal &= ~mySIGSTOP;
+				}
+				break;
+			}
+
+			case 0x17:	// ^w
+			{
+				sigSignal(-1, mySIGTSTP);
+				break;
+			}
+
+			case 0x18:	// ^x
 			{
 				inBufIndx = 0;
 				inBuffer[0] = 0;
-				sigSignal(0, mySIGINT);		// interrupt task 0
+				sigSignal(0, mySIGINT);	// interrupt task 0
 				semSignal(inBufferReady);	// SEM_SIGNAL(inBufferReady)
+				break;
+			}
+
+			case 0x48:	//up arrow;
+			{
+				int i;
+				int currentPos;
+
+				if (recallArgsv[0]) {
+
+					printf("%s", recallArgsv);
+
+					currentPos = 0;
+					while (recallArgsv[currentPos])
+					{
+						inBuffer[currentPos] = recallArgsv[currentPos];
+						currentPos++;
+					}
+					inBuffer[currentPos] = 0;
+					inBufIndx = currentPos;
+
+					for (i = 0; i < currentPos; i++)
+					{
+						recallArgsv[i] = 0;
+					}
+				}
 				break;
 			}
 

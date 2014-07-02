@@ -23,6 +23,7 @@
 #include <assert.h>
 #include "os345.h"
 #include "os345signals.h"
+#include <time.h>
 
 // The 'reset_context' comes from 'main' in os345.c.  Proper shut-down
 // procedure is to long jump to the 'reset_context' passing in the
@@ -32,12 +33,12 @@ extern jmp_buf reset_context;
 // -----
 
 
-#define NUM_COMMANDS 49
+#define NUM_COMMANDS 54
 typedef struct								// command struct
 {
 	char* command;
 	char* shortcut;
-	int (*func)(int, char**);
+	int(*func)(int, char**);
 	char* description;
 } Command;
 
@@ -55,7 +56,7 @@ Command** commands;						// shell commands
 // ***********************************************************************
 // project 1 prototypes
 Command** P1_init(void);
-Command* newCommand(char*, char*, int (*func)(int, char**), char*);
+Command* newCommand(char*, char*, int(*func)(int, char**), char*);
 
 
 // ***********************************************************************
@@ -96,11 +97,12 @@ int P1_shellTask(int argc, char* argv[])
 			// ?? parse command line into argc, argv[] variables
 			// ?? must use malloc for argv storage!
 			static char *sp, *myArgv[MAX_ARGS];
+			int j;
 
 			// init arguments
 			newArgc = 1;
 			myArgv[0] = sp = inBuffer;				// point to input string
-			for (i=1; i<MAX_ARGS; i++)
+			for (i = 1; i<MAX_ARGS; i++)
 				myArgv[i] = 0;
 
 			// parse input string
@@ -108,18 +110,58 @@ int P1_shellTask(int argc, char* argv[])
 			{
 				*sp++ = 0;
 				myArgv[newArgc++] = sp;
+				if (*sp == '"') {
+					(sp = strchr(++sp, '"'));
+				}
+
 			}
-			newArgv = myArgv;
-		}	// ?? >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+			newArgv = (char**)malloc(newArgc * sizeof(char*));
+
+			for (i = 0; i < newArgc; i++) {
+
+				//sp = myArgv[i];
+				newArgv[i] = (char *)malloc(strlen(myArgv[i]) + 1);
+
+				if (myArgv[i][0] != '"') {
+
+					for (j = 0; j <strlen(myArgv[i]); j++)	{
+						myArgv[i][j] = tolower(myArgv[i][j]);
+					}
+				}
+
+				strcpy(newArgv[i], myArgv[i]);
+			}
+
+
+
+			//newArgv = myArgv;
+
+			/*for (i = 0; i < MAX_ARGS; i++) {
+
+			if (newArgv[i] != 0)
+			printf("\n%s", newArgv[i]);
+			}*/
+
+		}
 
 		// look for command
 		for (found = i = 0; i < NUM_COMMANDS; i++)
 		{
 			if (!strcmp(newArgv[0], commands[i]->command) ||
-				 !strcmp(newArgv[0], commands[i]->shortcut))
+				!strcmp(newArgv[0], commands[i]->shortcut))
 			{
+				int retValue;
+
 				// command found
-				int retValue = (*commands[i]->func)(newArgc, newArgv);
+				if (*newArgv[newArgc - 1] == '&') {
+
+					retValue = createTask(newArgv[0], (*commands[i]->func), MED_PRIORITY, newArgc, newArgv);
+				}
+				else {
+					retValue = (*commands[i]->func)(newArgc, newArgv);
+				}
+
 				if (retValue) printf("\nCommand Error %d", retValue);
 				found = TRUE;
 				break;
@@ -128,7 +170,8 @@ int P1_shellTask(int argc, char* argv[])
 		if (!found)	printf("\nInvalid command!");
 
 		// ?? free up any malloc'd argv parameters
-		for (i=0; i<INBUF_SIZE; i++) inBuffer[i] = 0;
+		for (i = 0; i < INBUF_SIZE; i++) inBuffer[i] = 0;
+		//for (i = 0; i < newArgc; i++) free(newArgv[i]);
 	}
 	return 0;						// terminate task
 } // end P1_shellTask
@@ -142,7 +185,7 @@ int P1_project1(int argc, char* argv[])
 {
 	SWAP										// do context switch
 
-	return 0;
+		return 0;
 } // end P1_project1
 
 
@@ -177,7 +220,7 @@ int P1_quit(int argc, char* argv[])
 //
 int P1_lc3(int argc, char* argv[])
 {
-	strcpy (argv[0], "0");
+	strcpy(argv[0], "0");
 	return lc3Task(argc, argv);
 } // end P1_lc3
 
@@ -198,16 +241,139 @@ int P1_help(int argc, char* argv[])
 		if (strstr(commands[i]->description, ":")) printf("\n");
 		printf("\n%4s: %s", commands[i]->shortcut, commands[i]->description);
 	}
+	printf("\n\nSelect a command for more information: ");
+	SEM_WAIT(inBufferReady);			// wait for input buffer semaphore
+
+	for (i = 0; i < NUM_COMMANDS; i++)
+	{
+		if (strstr(commands[i]->command, inBuffer))
+		{
+			printf("\n");
+			printf("\n\tCommand:      %s", commands[i]->command);
+			printf("\n\tShortcut:     %s", commands[i]->shortcut);
+			printf("\n\tFunc Pointer: %d", commands[i]->func);
+			printf("\n\tDescription:  %s", commands[i]->description);
+			printf("\n");
+		}
+	}
 
 	return 0;
 } // end P1_help
 
 
+
+// **************************************************************************
+// **************************************************************************
+// args command
+//
+int P1_args(int argc, char* argv[])
+{
+	int i;
+	for (i = 0; i < argc; i++)
+		printf("\n%s", argv[i]);
+
+	return 0;
+} // end P1_args
+
+
+
+// **************************************************************************
+// **************************************************************************
+// add command
+//
+int P1_add(int argc, char* argv[])
+{
+	int i;
+	int numbers[50];
+
+	char* disregard = (char*)malloc(sizeof(char*));
+
+	for (i = 0; i < argc; i++)
+	{
+		if (argv[i][1] == 'x')
+			numbers[i] = strtol(argv[i], disregard, 16);
+		else
+			numbers[i] = strtol(argv[i], disregard, 10);
+	}
+
+	for (i = 1; i < argc; i++)
+	{
+		printf("\n%d", numbers[i]);
+
+		numbers[0] += numbers[i];
+	}
+
+	printf("\n%d", numbers[0]);
+	return 0;
+} // end P1_add
+
+
+
+// **************************************************************************
+// **************************************************************************
+// dateTime command
+//
+int P1_dateTime(int argc, char* argv[])
+{
+	time_t t;
+	time(&t);
+
+	printf("\nToday's date and time : %s", ctime(&t));
+	return 0;
+} // end P1_dateTime
+
+
+// **************************************************************************
+// **************************************************************************
+// loop command
+//
+int P1_loop(int argc, char* argv[])
+{
+	if (argc > 2){
+		printf("\nPlease provide a single integer for the loop");
+		printf("\nEx: loop 100");
+	}
+
+	int i = 0;
+
+	if (argc < 2) {
+		i = 1;
+	}
+	else {
+		if (argv[1][1] == 'x')
+			i = strtol(argv[1], NULL, 16);
+		else
+			i = strtol(argv[1], NULL, 10);
+	}
+
+	i *= 10000;
+
+	int loopCount = 1;
+	while (loopCount <= i) {
+		printf("\n%d", loopCount);
+		loopCount++;
+	}
+
+	printf("\nloop returned after %d iterations", i);
+	return 0;
+}
+
+
+// **************************************************************************
+// **************************************************************************
+// noel command
+//
+int P1_noel(int argc, char* argv[])
+{
+	printf("\nShe is sooo good looking");
+	return 0;
+}
+
 // ***********************************************************************
 // ***********************************************************************
 // initialize shell commands
 //
-Command* newCommand(char* command, char* shortcut, int (*func)(int, char**), char* description)
+Command* newCommand(char* command, char* shortcut, int(*func)(int, char**), char* description)
 {
 	Command* cmd = (Command*)malloc(sizeof(Command));
 
@@ -232,8 +398,8 @@ Command* newCommand(char* command, char* shortcut, int (*func)(int, char**), cha
 
 Command** P1_init()
 {
-	int i  = 0;
-	Command** commands = (Command**)malloc(sizeof(Command*) * NUM_COMMANDS);
+	int i = 0;
+	Command** commands = (Command**)malloc(sizeof(Command*)* NUM_COMMANDS);
 
 	// system
 	commands[i++] = newCommand("quit", "q", P1_quit, "Quit");
@@ -244,6 +410,11 @@ Command** P1_init()
 	commands[i++] = newCommand("project1", "p1", P1_project1, "P1: Shell");
 	commands[i++] = newCommand("help", "he", P1_help, "OS345 Help");
 	commands[i++] = newCommand("lc3", "lc3", P1_lc3, "Execute LC3 program");
+	commands[i++] = newCommand("args", "args", P1_args, "Echo Command Line Arguments");
+	commands[i++] = newCommand("add", "add", P1_add, "Add integers together");
+	commands[i++] = newCommand("date/time", "d/t", P1_dateTime, "Displays current date and time");
+	commands[i++] = newCommand("loop", "loop", P1_loop, "Runs a loop x1000 times of a given integer");
+	commands[i++] = newCommand("noel", "noel", P1_noel, "Describes Noel");
 
 	// P2: Tasking
 	commands[i++] = newCommand("project2", "p2", P2_project2, "P2: Tasking");
@@ -274,8 +445,8 @@ Command** P1_init()
 
 	// P5: Scheduling
 	commands[i++] = newCommand("project5", "p5", P5_project5, "P5: Scheduling");
-//	commands[i++] = newCommand("stress1", "t1", P5_stress1, "ATM stress test1");
-//	commands[i++] = newCommand("stress2", "t2", P5_stress2, "ATM stress test2");
+	//	commands[i++] = newCommand("stress1", "t1", P5_stress1, "ATM stress test1");
+	//	commands[i++] = newCommand("stress2", "t2", P5_stress2, "ATM stress test2");
 
 	// P6: FAT
 	commands[i++] = newCommand("project6", "p6", P6_project6, "P6: FAT");

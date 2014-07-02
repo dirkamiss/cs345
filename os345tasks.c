@@ -26,6 +26,8 @@
 
 #include "os345.h"
 #include "os345signals.h"
+#include "Queue.h"
+#include "os345lc3.h"
 //#include "os345config.h"
 
 
@@ -35,18 +37,20 @@ extern int curTask;							// current task #
 extern int superMode;						// system mode
 extern Semaphore* semaphoreList;			// linked list of active semaphores
 extern Semaphore* taskSems[MAX_TASKS];		// task semaphore
+extern PQueue* rq;							// ready priority queue
 
 
 // **********************************************************************
 // **********************************************************************
 // create task
 int createTask(char* name,						// task name
-					int (*task)(int, char**),	// task address
-					int priority,				// task priority
-					int argc,					// task argument count
-					char* argv[])				// task argument pointers
+	int(*task)(int, char**),	// task address
+	int priority,				// task priority
+	int argc,					// task argument count
+	char* argv[])				// task argument pointers
 {
 	int tid;
+	int i;
 
 	// find an open tcb entry slot
 	for (tid = 0; tid < MAX_TASKS; tid++)
@@ -59,10 +63,10 @@ int createTask(char* name,						// task name
 			if (taskSems[tid]) deleteSemaphore(&taskSems[tid]);
 			sprintf(buf, "task%d", tid);
 			taskSems[tid] = createSemaphore(buf, 0, 0);
-			taskSems[tid]->taskNum = 0;	// assign to shell
+			taskSems[tid]->taskNum = tid;	// assign to shell
 
 			// copy task name
-			tcb[tid].name = (char*)malloc(strlen(name)+1);
+			tcb[tid].name = (char*)malloc(strlen(name) + 1);
 			strcpy(tcb[tid].name, name);
 
 			// set task address and other parameters
@@ -73,7 +77,13 @@ int createTask(char* name,						// task name
 			tcb[tid].argc = argc;			// argument count
 
 			// ?? malloc new argv parameters
-			tcb[tid].argv = argv;			// argument pointers
+			tcb[tid].argv = (char**)malloc(argc * (sizeof(char*)));			// argument pointers
+
+			for (i = 0; i < argc; i++)
+			{
+				tcb[tid].argv[i] = (char*)malloc(strlen(argv[i]) + 1);
+				strcpy(tcb[tid].argv[i], argv[i]);
+			}
 
 			tcb[tid].event = 0;				// suspend semaphore
 			tcb[tid].RPT = 0;					// root page table (project 5)
@@ -86,6 +96,11 @@ int createTask(char* name,						// task name
 			tcb[tid].stack = malloc(STACK_SIZE * sizeof(int));
 
 			// ?? may require inserting task into "ready" queue
+
+			enQ(rq, tid, priority);
+
+			// allocate a unique Root Page Table
+			tcb[tid].RPT = LC3_RPT + ((tid) ? ((tid - 1) << 6) : 0);
 
 			if (tid) swapTask();				// do context switch (if not cli)
 			return tid;							// return tcb index (curTask)
@@ -150,6 +165,7 @@ int sysKillTask(int taskId)
 {
 	Semaphore* sem = semaphoreList;
 	Semaphore** semLink = &semaphoreList;
+	int i;
 
 	// assert that you are not pulling the rug out from under yourself!
 	assert("sysKillTask Error" && tcb[taskId].name && superMode);
@@ -159,9 +175,9 @@ int sysKillTask(int taskId)
 	semSignal(taskSems[taskId]);
 
 	// look for any semaphores created by this task
-	while(sem = *semLink)
+	while (sem = *semLink)
 	{
-		if(sem->taskNum == taskId)
+		if (sem->taskNum == taskId)
 		{
 			// semaphore found, delete from list, release memory
 			deleteSemaphore(semLink);
@@ -174,6 +190,11 @@ int sysKillTask(int taskId)
 	}
 
 	// ?? delete task from system queues
+	deQ(rq, taskId);
+
+	for (i = 0; i < tcb[taskId].argc; i++) {
+		free(tcb[taskId].argv[i]);
+	}
 
 	tcb[taskId].name = 0;			// release tcb slot
 	return 0;
