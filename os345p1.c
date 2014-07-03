@@ -158,13 +158,14 @@ int P1_shellTask(int argc, char* argv[])
 
 					createTask(newArgv[0], (*commands[i]->func), MED_PRIORITY, newArgc, newArgv);
 					found = TRUE;
+					break;
 				}
 				else {
 					retValue = (*commands[i]->func)(newArgc, newArgv);
 				}
 
 				if (retValue) printf("\nCommand Error %d", retValue);
-				if (!found) printf("\nInvalid command!");
+				found = TRUE;
 				break;
 			}
 		}
