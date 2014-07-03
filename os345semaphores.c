@@ -242,7 +242,7 @@ bool deleteSemaphore(Semaphore** semaphore)
 			*semLink = (Semaphore*)sem->semLink;
 
 			// free the name array before freeing semaphore
-			printf("\ndeleteSemaphore(%s)", sem->name);
+			//printf("\ndeleteSemaphore(%s)", sem->name);
 
 			// ?? free all semaphore memory
 			free(sem->name);

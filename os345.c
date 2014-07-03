@@ -235,7 +235,7 @@ static int dispatcher()
 
 			// move to new task stack (leave room for return value/address)
 			temp = (int*)tcb[curTask].stack + (STACK_SIZE-8);
-			printf("hello");
+			//printf("hello");
 			SET_STACK(temp);
 			superMode = FALSE;						// user mode
 

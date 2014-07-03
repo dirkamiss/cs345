@@ -72,7 +72,7 @@ void pollInterrupts(void)
 {
 	// check for task monopoly
 	pollClock = clock();
-	//assert("Timeout" && ((pollClock - lastPollClock) < MAX_CYCLES));
+	assert("Timeout" && ((pollClock - lastPollClock) < MAX_CYCLES));
 	lastPollClock = pollClock;
 
 	// check for keyboard interrupt
@@ -125,6 +125,8 @@ static void keyboard_isr()
 
 			case 0x12:	//^r
 			{
+				inBufIndx = 0;
+				inBuffer[0] = 0;
 				int i;
 				sigSignal(-1, mySIGCONT);
 				for (i = 0; i < MAX_ARGS; i++)
@@ -137,6 +139,8 @@ static void keyboard_isr()
 
 			case 0x17:	// ^w
 			{
+				inBufIndx = 0;
+				inBuffer[0] = 0;
 				sigSignal(-1, mySIGTSTP);
 				break;
 			}

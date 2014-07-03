@@ -151,19 +151,20 @@ int P1_shellTask(int argc, char* argv[])
 			if (!strcmp(newArgv[0], commands[i]->command) ||
 				!strcmp(newArgv[0], commands[i]->shortcut))
 			{
-				int retValue;
+				int retValue = 0;
 
 				// command found
 				if (*newArgv[newArgc - 1] == '&') {
 
-					retValue = createTask(newArgv[0], (*commands[i]->func), MED_PRIORITY, newArgc, newArgv);
+					createTask(newArgv[0], (*commands[i]->func), MED_PRIORITY, newArgc, newArgv);
+					found = TRUE;
 				}
 				else {
 					retValue = (*commands[i]->func)(newArgc, newArgv);
 				}
 
 				if (retValue) printf("\nCommand Error %d", retValue);
-				found = TRUE;
+				if (!found) printf("\nInvalid command!");
 				break;
 			}
 		}
