@@ -128,9 +128,14 @@ int P1_shellTask(int argc, char* argv[])
 					for (j = 0; j <strlen(myArgv[i]); j++)	{
 						myArgv[i][j] = tolower(myArgv[i][j]);
 					}
+					strcpy(newArgv[i], myArgv[i]);
+				}
+				else {
+					strncpy(newArgv[i], myArgv[i]+1,strlen(myArgv[i])-2);
+					newArgv[i][strlen(myArgv[i]) - 2] = '\0';
 				}
 
-				strcpy(newArgv[i], myArgv[i]);
+				
 			}
 
 
