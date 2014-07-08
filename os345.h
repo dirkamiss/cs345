@@ -65,6 +65,8 @@
 #define PAGE_READ      		0
 #define PAGE_INIT     		-1
 
+#define TOTAL_TIME			1000
+
 
 // ***********************************************************************
 // system structs
@@ -79,6 +81,7 @@ typedef struct semaphore			// semaphore
 	int state;							// semaphore state
 	int type;							// semaphore type
 	int taskNum;						// semaphore creator task #
+	PQueue* pq;
 } Semaphore;
 
 // task control block
@@ -102,6 +105,8 @@ typedef struct							// task control block
 	Semaphore *event;					// blocked task semaphore
 	void* stack;						// task stack
 	jmp_buf context;					// task context pointer
+	int time;
+	int childCount;
 } TCB;
 
 // Task specific variables

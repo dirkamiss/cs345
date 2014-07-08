@@ -29,12 +29,19 @@
 #include "os345config.h"
 #include "os345lc3.h"
 #include "os345fat.h"
+//#include "DeltaClk.h"
+
+//#include "Queue.h"
+
 
 // **********************************************************************
 //	local prototypes
 //
 void pollInterrupts(void);
 static int scheduler(void);
+static int fair_scheduler(void);
+void reissueTime();
+void reallocateTime(int tid);
 static int dispatcher(void);
 
 //static void keyboard_isr(void);
@@ -54,7 +61,11 @@ Semaphore* charReady;				// character has been entered
 Semaphore* inBufferReady;			// input buffer ready semaphore
 
 Semaphore* tics1sec;				// 1 second semaphore
+Semaphore* tics10sec;				// 10 second semaphore
 Semaphore* tics10thsec;				// 1/10 second semaphore
+
+Semaphore* deltaClkMutex;			//protect the delta clock
+Semaphore* countMutex;
 
 // **********************************************************************
 // **********************************************************************
@@ -62,6 +73,7 @@ Semaphore* tics10thsec;				// 1/10 second semaphore
 
 TCB tcb[MAX_TASKS];					// task control block
 Semaphore* taskSems[MAX_TASKS];		// task semaphore
+int tasksOnHold[MAX_TASKS];  // task without time in fair_scheduler
 jmp_buf k_context;					// context of kernel stack
 jmp_buf reset_context;				// context of kernel stack
 volatile void* temp;				// temp pointer used in dispatcher
@@ -73,7 +85,7 @@ long swapCount;						// number of re-schedule cycles
 char inChar;						// last entered character
 int charFlag;						// 0 => buffered input
 int inBufIndx;						// input pointer into input buffer
-char inBuffer[INBUF_SIZE+1];		// character input buffer
+char inBuffer[INBUF_SIZE + 1];		// character input buffer
 //Message messages[NUM_MESSAGES];		// process message buffers
 
 int pollClock;						// current clock()
@@ -81,9 +93,11 @@ int lastPollClock;					// last pollClock
 bool diskMounted;					// disk has been mounted
 
 time_t oldTime1;					// old 1sec time
+time_t oldTime10;
 clock_t myClkTime;
 clock_t myOldClkTime;
 PQueue* rq;							// ready priority queue
+//DeltaClk* dcq;
 
 
 // **********************************************************************
@@ -100,33 +114,34 @@ int main(int argc, char* argv[])
 {
 	// save context for restart (a system reset would return here...)
 	int resetCode = setjmp(reset_context);
+
 	superMode = TRUE;						// supervisor mode
 
 	switch (resetCode)
 	{
-		case POWER_DOWN_QUIT:				// quit
-			powerDown(0);
-			printf("\nGoodbye!!");
-			return 0;
+	case POWER_DOWN_QUIT:				// quit
+		powerDown(0);
+		printf("\nGoodbye!!");
+		return 0;
 
-		case POWER_DOWN_RESTART:			// restart
-			powerDown(resetCode);
-			printf("\nRestarting system...\n");
+	case POWER_DOWN_RESTART:			// restart
+		powerDown(resetCode);
+		printf("\nRestarting system...\n");
 
-		case POWER_UP:						// startup
-			break;
+	case POWER_UP:						// startup
+		break;
 
-		default:
-			printf("\nShutting down due to error %d", resetCode);
-			powerDown(resetCode);
-			return resetCode;
+	default:
+		printf("\nShutting down due to error %d", resetCode);
+		powerDown(resetCode);
+		return resetCode;
 	}
 
 	// output header message
 	printf("%s", STARTUP_MSG);
 
 	// initalize OS
-	if ( resetCode = initOS()) return resetCode;
+	if (resetCode = initOS()) return resetCode;
 
 	// create global/system semaphores here
 	//?? vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -136,15 +151,38 @@ int main(int argc, char* argv[])
 	keyboard = createSemaphore("keyboard", BINARY, 1);
 	tics1sec = createSemaphore("tics1sec", BINARY, 0);
 	tics10thsec = createSemaphore("tics10thsec", BINARY, 0);
+	tics10sec = createSemaphore("tics10sec", COUNTING, 0);
 
+	deltaClkMutex = createSemaphore("deltaClkMutex", BINARY, 1);
+	countMutex = createSemaphore("countMutex", BINARY, 1);
 	//?? ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+	//testing
+
+	//DeltaClk * deltaClk = initDeltaClk(); //90, 300, 50, 170, 340, 300, 50, 300, 40, 110, 9000, 1
+	//insertDeltaClock(deltaClk, 90, tics10sec);
+	//insertDeltaClock(deltaClk, 300, tics10sec);
+	//insertDeltaClock(deltaClk, 50, tics10sec);
+	//insertDeltaClock(deltaClk, 170, tics1sec);
+	//insertDeltaClock(deltaClk, 340, tics10thsec);
+	//insertDeltaClock(deltaClk, 300, tics10thsec);
+	//insertDeltaClock(deltaClk, 50, tics10thsec);
+	//insertDeltaClock(deltaClk, 300, tics10thsec);
+	//insertDeltaClock(deltaClk, 40, tics10thsec);
+	//insertDeltaClock(deltaClk, 110, tics10thsec);
+	//insertDeltaClock(deltaClk, 9000, tics10thsec);
+	//insertDeltaClock(deltaClk, 1, tics10thsec);
+
+	//while (1) {
+	//	decrementDeltaClock(deltaClk);
+	//}
 
 	// schedule CLI task
 	createTask("myShell",			// task name
-					P1_shellTask,	// task
-					MED_PRIORITY,	// task priority
-					argc,			// task arg count
-					argv);			// task argument pointers
+		P1_shellTask,	// task
+		MED_PRIORITY,	// task priority
+		argc,			// task arg count
+		argv);			// task argument pointers
 
 	// HERE WE GO................
 
@@ -154,13 +192,18 @@ int main(int argc, char* argv[])
 	// 3. Dispatch task
 	// 4. Loop (forever!)
 
-	while(1)									// scheduling loop
+	while (1)									// scheduling loop
 	{
 		// check for character / timer interrupts
 		pollInterrupts();
 
-		// schedule highest priority ready task
-		if ((curTask = scheduler()) < 0) continue;
+		if (scheduler_mode) {
+			if ((curTask = fair_scheduler()) < 0) continue;
+		}
+		else {
+			// schedule highest priority ready task
+			if ((curTask = scheduler()) < 0) continue;
+		}
 
 		// dispatch curTask, quit OS if negative return
 		if (dispatcher() < 0) break;
@@ -195,19 +238,123 @@ static int scheduler()
 	// ?? priorities, clean up dead tasks, and handle semaphores appropriately.
 
 	// schedule next task
-	nextTask = ++curTask;
+	task t;
+	t = deQtop(rq);
+	nextTask = t.tid;
+
+	if (nextTask != -1) {
+		enQ(rq, t.tid, t.priority);
+	}
+
+	//nextTask = ++curTask;
+
+	//printf("\n%d", curTask);
+
+	curTask = nextTask;
 
 	// mask sure nextTask is valid
 	while (!tcb[nextTask].name)
 	{
 		if (++nextTask >= MAX_TASKS) nextTask = 0;
 	}
-	if (tcb[nextTask].signal & mySIGSTOP) return -1;
+
+	if (nextTask != -1 && (tcb[nextTask].signal & mySIGSTOP)) {
+		//sysKillTask(nextTask);
+		return -1;
+	}
 
 	return nextTask;
 } // end scheduler
 
 
+// **********************************************************************
+// **********************************************************************
+// fair_scheduler
+//
+static int fair_scheduler()
+{
+	int nextTask;
+
+	// schedule next task
+	task t;
+
+	while (1)
+	{
+		t = deQtop(rq);
+		nextTask = t.tid;
+		if (nextTask != -1)
+		{
+			if (tcb[nextTask].time > 0)
+			{
+				tcb[nextTask].time--;
+				enQ(rq, nextTask, t.priority);
+				break;
+			}
+			else
+			{
+				tasksOnHold[nextTask] = t.tid; //put in another an array
+			}
+		}
+		//no more tasks with time available
+		else
+		{
+			tcb[0].time = TOTAL_TIME;
+
+			reissueTime();
+
+			for (int i = 0; i < MAX_TASKS; i++)
+			{
+				//enque them back
+				if (tasksOnHold[i])
+				{
+					enQ(rq, tasksOnHold[i], tcb[tasksOnHold[i]].priority);
+				}
+				tasksOnHold[i] = 0;
+			}
+		}
+	}
+
+	// mask sure nextTask is valid
+	while (!tcb[nextTask].name)
+	{
+		if (++nextTask >= MAX_TASKS) nextTask = 0;
+	}
+
+	if (nextTask != -1 && (tcb[nextTask].signal & mySIGSTOP)) {
+		//sysKillTask(nextTask);
+		return -1;
+	}
+
+	return nextTask;
+} // end fair_scheduler
+
+
+void reissueTime()
+{
+	for (int i = 0; i < MAX_TASKS; i++)
+	{
+		if (tasksOnHold[i])
+			tcb[tcb[i].parent].childCount++;
+	}
+
+	for (int i = 0; i < MAX_TASKS; i++)
+	{
+		if (tasksOnHold[i]) {
+			if (!tcb[i].time)
+				reallocateTime(i);
+		}
+	}
+
+}
+
+void reallocateTime(int tid) {
+	if (!tcb[tcb[tid].parent].time)
+		reallocateTime(tcb[tid].parent);
+
+	tcb[tid].time = (tcb[tcb[tid].parent].time / (tcb[tcb[tid].parent].childCount + 1));
+	tcb[tcb[tid].parent].time -= tcb[tid].time;
+	tcb[tcb[tid].parent].childCount--;
+}
 
 // **********************************************************************
 // **********************************************************************
@@ -218,74 +365,74 @@ static int dispatcher()
 	int result;
 
 	// schedule task
-	switch(tcb[curTask].state)
+	switch (tcb[curTask].state)
 	{
-		case S_NEW:
-		{
-			// new task
-			printf("\nNew Task[%d] %s", curTask, tcb[curTask].name);
-			tcb[curTask].state = S_RUNNING;	// set task to run state
+	case S_NEW:
+	{
+				  // new task
+				  printf("\nNew Task[%d] %s", curTask, tcb[curTask].name);
+				  tcb[curTask].state = S_RUNNING;	// set task to run state
 
-			// save kernel context for task SWAP's
-			if (setjmp(k_context))
-			{
-				superMode = TRUE;					// supervisor mode
-				break;								// context switch to next task
-			}
+				  // save kernel context for task SWAP's
+				  if (setjmp(k_context))
+				  {
+					  superMode = TRUE;					// supervisor mode
+					  break;								// context switch to next task
+				  }
 
-			// move to new task stack (leave room for return value/address)
-			temp = (int*)tcb[curTask].stack + (STACK_SIZE-8);
-			//printf("hello");
-			SET_STACK(temp);
-			superMode = FALSE;						// user mode
+				  // move to new task stack (leave room for return value/address)
+				  temp = (int*)tcb[curTask].stack + (STACK_SIZE - 8);
+				  SET_STACK(temp);
+				  superMode = FALSE;						// user mode
 
-			// begin execution of new task, pass argc, argv
-			result = (*tcb[curTask].task)(tcb[curTask].argc, tcb[curTask].argv);
+				  // begin execution of new task, pass argc, argv
+				  result = (*tcb[curTask].task)(tcb[curTask].argc, tcb[curTask].argv);
 
-			// task has completed
-			if (result) printf("\nTask[%d] returned %d", curTask, result);
-			else printf("\nTask[%d] returned %d", curTask, result);
-			tcb[curTask].state = S_EXIT;			// set task to exit state
+				  // task has completed
+				  if (result) printf("\nTask[%d] returned %d", curTask, result);
+				  else printf("\nTask[%d] returned %d", curTask, result);
+				  tcb[curTask].state = S_EXIT;			// set task to exit state
 
-			// return to kernal mode
-			longjmp(k_context, 1);					// return to kernel
-		}
+				  // return to kernal mode
+				  longjmp(k_context, 1);					// return to kernel
+	}
 
-		case S_READY:
-		{
-			tcb[curTask].state = S_RUNNING;			// set task to run
-		}
+	case S_READY:
+	{
+					tcb[curTask].state = S_RUNNING;			// set task to run
+	}
 
-		case S_RUNNING:
-		{
-			if (setjmp(k_context))
-			{
-				// SWAP executed in task
-				superMode = TRUE;					// supervisor mode
-				break;								// return from task
-			}
-			if (signals()) break;
-			longjmp(tcb[curTask].context, 3); 		// restore task context
-		}
+	case S_RUNNING:
+	{
+					  if (setjmp(k_context))
+					  {
+						  // SWAP executed in task
+						  superMode = TRUE;					// supervisor mode
+						  break;								// return from task
+					  }
+					  if (signals()) break;
+					  longjmp(tcb[curTask].context, 3); 		// restore task context
+	}
 
-		case S_BLOCKED:
-		{
-			break;
-		}
+	case S_BLOCKED:
+	{
+					  // ?? Could check here to unblock task
+					  break;
+	}
 
-		case S_EXIT:
-		{
-			if (curTask == 0) return -1;			// if CLI, then quit scheduler
-			// release resources and kill task
-			sysKillTask(curTask);					// kill current task
-			break;
-		}
+	case S_EXIT:
+	{
+				   if (curTask == 0) return -1;			// if CLI, then quit scheduler
+				   // release resources and kill task
+				   sysKillTask(curTask);					// kill current task
+				   break;
+	}
 
-		default:
-		{
-			printf("Unknown Task[%d] State", curTask);
-			longjmp(reset_context, POWER_DOWN_ERROR);
-		}
+	default:
+	{
+			   printf("Unknown Task[%d] State", curTask);
+			   longjmp(reset_context, POWER_DOWN_ERROR);
+	}
 	}
 	return 0;
 } // end dispatcher
@@ -340,8 +487,8 @@ static int initOS()
 	// make any system adjustments (for unblocking keyboard inputs)
 	INIT_OS
 
-	// reset system variables
-	curTask = 0;						// current task #
+		// reset system variables
+		curTask = 0;						// current task #
 	swapCount = 0;						// number of scheduler cycles
 	scheduler_mode = 0;					// default scheduler
 	inChar = 0;							// last entered character
@@ -354,25 +501,29 @@ static int initOS()
 	rq = initQueue();
 	if (rq == NULL) return 99;
 
+	// initialize delta clock
+	//dcq = initDeltaClk();
+
 	// capture current time
 	lastPollClock = clock();			// last pollClock
 	time(&oldTime1);
+	time(&oldTime10);
 
 	// init system tcb's
-	for (i=0; i<MAX_TASKS; i++)
+	for (i = 0; i < MAX_TASKS; i++)
 	{
 		tcb[i].name = NULL;				// tcb
 		taskSems[i] = NULL;				// task semaphore
 	}
 
 	// init tcb
-	for (i=0; i<MAX_TASKS; i++)
+	for (i = 0; i < MAX_TASKS; i++)
 	{
 		tcb[i].name = NULL;
 	}
 
 	// initialize lc-3 memory
-	initLC3Memory(LC3_MEM_FRAME, 0xF800>>6);
+	initLC3Memory(LC3_MEM_FRAME, 0xF800 >> 6);
 
 	// ?? initialize all execution queues
 
@@ -393,8 +544,8 @@ void powerDown(int code)
 	printf("\nRecovering Task Resources...");
 
 	// kill all tasks
-	for (i = MAX_TASKS-1; i >= 0; i--)
-		if(tcb[i].name) sysKillTask(i);
+	for (i = MAX_TASKS - 1; i >= 0; i--)
+	if (tcb[i].name) sysKillTask(i);
 
 	// delete all semaphores
 	while (semaphoreList)
@@ -405,8 +556,9 @@ void powerDown(int code)
 
 	// ?? release any other system resources
 	// ?? deltaclock (project 3)
+	//free(dcq);
 
 	RESTORE_OS
-	return;
+		return;
 } // end powerDown
 
