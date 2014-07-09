@@ -81,7 +81,7 @@ void pollInterrupts(void)
 	// check for keyboard interrupt
 	if ((inChar = GET_CHAR) > 0)
 	{
-	  keyboard_isr();
+		keyboard_isr();
 	}
 
 	// timer interrupt
@@ -102,6 +102,7 @@ static void keyboard_isr()
 	semSignal(charReady);					// SIGNAL(charReady) (No Swap)
 	if (charFlag == 0)
 	{
+
 		switch (inChar)
 		{
 			case '\r':

@@ -45,7 +45,7 @@ extern PQueue * rq;							//ready queue
 
 int signalTask(int, char**);
 int ImAliveTask(int, char**);
-int reEntrantTask(int argc, char**);
+int tenSecTask(int argc, char**);
 
 // ***********************************************************************
 // ***********************************************************************
@@ -59,9 +59,9 @@ int P2_project2(int argc, char* argv[])
 	printf("\nStarting Project 2");
 	SWAP;
 
-	// start tasks looking for sTask semaphores
+	// start tasks
 	for (int i = 0; i < 9; i++)	{
-		createTask("TenSeconds", reEntrantTask, HIGH_PRIORITY, 0, 0);
+		createTask("TenSeconds", tenSecTask, HIGH_PRIORITY, 0, 0);
 	}
 
 	createTask("sTask1",				// task name
@@ -279,13 +279,12 @@ int ImAliveTask(int argc, char* argv[])
 
 
 
-int reEntrantTask(int argc, char* argv[]) {
+int tenSecTask(int argc, char* argv[]) {
 
+	char svtime[64];
 	while (1) {
 		SEM_WAIT(tics10sec);
-		time_t t;
-		ctime(&t);
-		printf("\nTask[%d], %s", curTask, ctime(&t));
+		printf("\nTask[%d], %s", curTask, myTime(svtime));
 	}
 }
 

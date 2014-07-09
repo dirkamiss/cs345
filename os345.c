@@ -153,8 +153,8 @@ int main(int argc, char* argv[])
 	tics10thsec = createSemaphore("tics10thsec", BINARY, 0);
 	tics10sec = createSemaphore("tics10sec", COUNTING, 0);
 
-	deltaClkMutex = createSemaphore("deltaClkMutex", BINARY, 1);
-	countMutex = createSemaphore("countMutex", BINARY, 1);
+	//deltaClkMutex = createSemaphore("deltaClkMutex", BINARY, 1);
+	//countMutex = createSemaphore("countMutex", BINARY, 1);
 	//?? ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 	//testing
