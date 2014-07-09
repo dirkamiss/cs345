@@ -272,7 +272,7 @@ int ImAliveTask(int argc, char* argv[])
 	while (1)
 	{
 		printf("\n(%d) I'm Alive!", curTask);
-		for (i = 0; i<100000; i++) swapTask();
+		for (i = 0; i<300000; i++) swapTask();
 	}
 	return 0;						// terminate task
 } // end ImAliveTask
@@ -283,6 +283,7 @@ int tenSecTask(int argc, char* argv[]) {
 
 	char svtime[64];
 	while (1) {
+		//printf("\ntics10secs at %d", tics10sec->state);
 		SEM_WAIT(tics10sec);
 		printf("\nTask[%d], %s", curTask, myTime(svtime));
 	}

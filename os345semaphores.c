@@ -79,22 +79,32 @@ void semSignal(Semaphore* s)
 	{
 		// counting semaphore
 
-		if (curTask == -1 && s->state < 0)	return;
+		//if (++s->state>0) return;
+
+		//int tid = dequeue(s->q, -1);
+
+		//tcb[tid].state = S_READY;
+		//tcb[tid].event = 0;
+		//enqueue(rq, tid, tcb[tid].priority);
+		//printf("\attempt sig %d", s->state);
+		
+		if (curTask == -1 && s->state < -1)	return;
 
 		s->state++;
-
+		//printf("\counting sig %d", s->state);
 		// move task from blocked to ready queue
 
-		task t;
+		task t = deQtop(s->pq);
 
 		//t = deQ(rq, curTask);
-		t = deQtop(s->pq);
+		//t = 
 
 		if (t.tid != -1) {
-			enQ(rq, t.tid, t.priority);
+			
 
 			tcb[t.tid].event = 0;			// clear event pointer
 			tcb[t.tid].state = S_READY;		// unblock task
+			enQ(rq, t.tid, t.priority);
 		}
 
 		if (!superMode) swapTask();
@@ -123,6 +133,7 @@ int semWait(Semaphore* s)
 	{
 		// binary semaphore
 		// if state is zero, then block task
+		//printf("\nwait on sem %d", s->state);
 		if (s->state == 0)
 		{
 			task t;
@@ -174,7 +185,7 @@ int semWait(Semaphore* s)
 		task t;
 
 		// move task from ready queue to blocked queue
-		if ((s->state) < 0)
+		if ((s->state) < 1)
 		{
 			t = deQ(rq, curTask);
 

@@ -28,7 +28,7 @@
 #define MAX_STRING_SIZE		127
 #define MAX_ARGS			50
 #define STACK_SIZE			(64*1024/sizeof(int))
-#define MAX_CYCLES			CLOCKS_PER_SEC/2
+#define MAX_CYCLES			CLOCKS_PER_SEC
 #define NUM_MESSAGES		500
 #define INBUF_SIZE			256
 #define ONE_TENTH_SEC		(CLOCKS_PER_SEC/10)
