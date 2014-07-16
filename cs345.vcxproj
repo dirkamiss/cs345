@@ -76,6 +76,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DClock.c" />
     <ClCompile Include="os345.c" />
     <ClCompile Include="os345fat.c" />
     <ClCompile Include="os345interrupts.c" />
@@ -94,6 +95,7 @@
     <ClCompile Include="Queue.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DClock.h" />
     <ClInclude Include="os345.h" />
     <ClInclude Include="os345config.h" />
     <ClInclude Include="os345fat.h" />

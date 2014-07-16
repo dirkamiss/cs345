@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <setjmp.h>
 #include <time.h>
 #include <assert.h>
 
@@ -29,7 +28,7 @@
 #include "os345config.h"
 #include "os345lc3.h"
 #include "os345fat.h"
-//#include "DeltaClk.h"
+#include "DClock.h"
 
 //#include "Queue.h"
 
@@ -97,7 +96,8 @@ time_t oldTime10;
 clock_t myClkTime;
 clock_t myOldClkTime;
 PQueue* rq;							// ready priority queue
-//DeltaClk* dcq;
+DClock* dc;
+Semaphore* deltaClockMutex;
 
 
 // **********************************************************************
@@ -153,8 +153,8 @@ int main(int argc, char* argv[])
 	tics10thsec = createSemaphore("tics10thsec", BINARY, 0);
 	tics10sec = createSemaphore("tics10sec", COUNTING, 0);
 
-	//deltaClkMutex = createSemaphore("deltaClkMutex", BINARY, 1);
-	//countMutex = createSemaphore("countMutex", BINARY, 1);
+	deltaClkMutex = createSemaphore("deltaClkMutex", BINARY, 1);
+	countMutex = createSemaphore("countMutex", BINARY, 1);
 	//?? ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 	//testing
@@ -502,7 +502,8 @@ static int initOS()
 	if (rq == NULL) return 99;
 
 	// initialize delta clock
-	//dcq = initDeltaClk();
+	dc = newDeltaClock();
+	deltaClockMutex = createSemaphore("deltaClockMutex", BINARY, 1);
 
 	// capture current time
 	lastPollClock = clock();			// last pollClock
@@ -556,7 +557,7 @@ void powerDown(int code)
 
 	// ?? release any other system resources
 	// ?? deltaclock (project 3)
-	//free(dcq);
+	deleteDeltaClock(dc);
 
 	RESTORE_OS
 		return;

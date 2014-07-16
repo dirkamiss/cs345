@@ -27,6 +27,7 @@
 #include "os345.h"
 #include "os345config.h"
 #include "os345signals.h"
+#include "DClock.h"
 
 // **********************************************************************
 //	local prototypes
@@ -64,6 +65,7 @@ extern int lastPollClock;			// last pollClock
 extern int superMode;						// system mode
 
 extern TCB tcb[];
+extern DClock* dc;
 char recallArgsv[50];
 int recallArgsc;
 
@@ -234,6 +236,7 @@ static void timer_isr()
 
 		myOldClkTime = myOldClkTime + ONE_TENTH_SEC; // update old
 		semSignal(tics10thsec);
+		tic(dc);
 	}
 
 	// ?? add other timer sampling/signaling code here for project 2

@@ -49,7 +49,8 @@ void semSignal(Semaphore* s)
 	//if (strncmp(s->name, "tics10thsec", 100) != 0) printf("\n%s", s->name);
 
 	// assert there is a semaphore and it is a legal type
-	assert("semSignal Error" && s && ((s->type == 0) || (s->type == 1)));
+	assert("semSignal Error" && s);
+	assert("semSignal Error" && ((s->type == 0) || (s->type == 1)));
 
 	// check semaphore type
 	if (s->type == 0)
