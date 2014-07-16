@@ -3,16 +3,16 @@
 #include <assert.h>
 #include "DClock.h"
 
-DClock* newDeltaClock() {
+DClock* newDClock() {
 	DClock* dc = (DClock*)malloc(sizeof(DClock));
 	dc->head = NULL;
 	return dc;
 }
 
-void deleteDeltaClock(DClock* dc) {
+void deleteDClock(DClock* dc) {
 	assert("NULL DeltaClock*" && dc);
-	DeltaClockItem* cur = dc->head;
-	DeltaClockItem* temp;
+	DClockItem* cur = dc->head;
+	DClockItem* temp;
 
 	while (cur) {
 		temp = cur;
@@ -26,7 +26,7 @@ void deleteDeltaClock(DClock* dc) {
 void printClock(DClock* dc) {
 	printf("**");			SWAP;
 
-	DeltaClockItem* cur = dc->head;			SWAP;
+	DClockItem* cur = dc->head;			SWAP;
 
 	while (cur) {
 		printf("{%d} ", cur->tics);			SWAP;
@@ -38,8 +38,8 @@ void printClock(DClock* dc) {
 
 void insert(DClock* dc, int tics, Semaphore* event) {
 	assert("Invalid tic count" && tics > 0);
-	semWait(deltaClockMutex);
-	DeltaClockItem* item = (DeltaClockItem*)malloc(sizeof(DeltaClockItem));			SWAP;
+	semWait(DClockMutex);
+	DClockItem* item = (DClockItem*)malloc(sizeof(DClockItem));			SWAP;
 	item->event = event;			SWAP;
 	item->next = NULL;			SWAP;
 
@@ -55,8 +55,8 @@ void insert(DClock* dc, int tics, Semaphore* event) {
 	}
 	else {
 		int diff = tics - dc->head->tics;			SWAP;
-		DeltaClockItem* prev = dc->head;			SWAP;
-		DeltaClockItem* cur = dc->head->next;			SWAP;
+		DClockItem* prev = dc->head;			SWAP;
+		DClockItem* cur = dc->head->next;			SWAP;
 
 		while (1) {
 			if (!cur) {
@@ -79,7 +79,7 @@ void insert(DClock* dc, int tics, Semaphore* event) {
 			cur = cur->next;			SWAP;
 		}
 	}
-	semSignal(deltaClockMutex);
+	semSignal(DClockMutex);
 }
 
 void tic(DClock* dc) {
@@ -87,7 +87,7 @@ void tic(DClock* dc) {
 		dc->head->tics--;
 		while (dc->head && dc->head->tics == 0) {
 			semSignal(dc->head->event);
-			DeltaClockItem* oldHead = dc->head;
+			DClockItem* oldHead = dc->head;
 			dc->head = dc->head->next;
 			free(oldHead);
 		}

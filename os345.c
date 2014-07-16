@@ -63,9 +63,6 @@ Semaphore* tics1sec;				// 1 second semaphore
 Semaphore* tics10sec;				// 10 second semaphore
 Semaphore* tics10thsec;				// 1/10 second semaphore
 
-Semaphore* deltaClkMutex;			//protect the delta clock
-Semaphore* countMutex;
-
 // **********************************************************************
 // **********************************************************************
 // global system variables
@@ -97,7 +94,7 @@ clock_t myClkTime;
 clock_t myOldClkTime;
 PQueue* rq;							// ready priority queue
 DClock* dc;
-Semaphore* deltaClockMutex;
+Semaphore* DClockMutex;
 
 
 // **********************************************************************
@@ -153,8 +150,8 @@ int main(int argc, char* argv[])
 	tics10thsec = createSemaphore("tics10thsec", BINARY, 0);
 	tics10sec = createSemaphore("tics10sec", COUNTING, 0);
 
-	deltaClkMutex = createSemaphore("deltaClkMutex", BINARY, 1);
-	countMutex = createSemaphore("countMutex", BINARY, 1);
+	//deltaClkMutex = createSemaphore("deltaClkMutex", BINARY, 1);
+	//countMutex = createSemaphore("countMutex", BINARY, 1);
 	//?? ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 	//testing
@@ -502,8 +499,8 @@ static int initOS()
 	if (rq == NULL) return 99;
 
 	// initialize delta clock
-	dc = newDeltaClock();
-	deltaClockMutex = createSemaphore("deltaClockMutex", BINARY, 1);
+	dc = newDClock();
+	DClockMutex = createSemaphore("deltaClockMutex", BINARY, 1);
 
 	// capture current time
 	lastPollClock = clock();			// last pollClock
@@ -557,7 +554,7 @@ void powerDown(int code)
 
 	// ?? release any other system resources
 	// ?? deltaclock (project 3)
-	deleteDeltaClock(dc);
+	deleteDClock(dc);
 
 	RESTORE_OS
 		return;

@@ -1,20 +1,20 @@
 #include "os345.h"
-extern Semaphore* deltaClockMutex;
+extern Semaphore* DClockMutex;
 
 #ifdef TESTING
 typedef int Semaphore;
 #endif
 
-struct _DeltaClockItem {
+struct _DClockItem {
 	int tics;
 	Semaphore* event;
-	struct _DeltaClockItem* next;
+	struct _DClockItem* next;
 };
 
-typedef struct _DeltaClockItem DeltaClockItem;
+typedef struct _DClockItem DClockItem;
 
 typedef struct {
-	DeltaClockItem* head;
+	DClockItem* head;
 } DClock;
 
 DClock* newDeltaClock();
