@@ -38,7 +38,7 @@ extern Semaphore* seatFilled[NUM_CARS];		// (wait) passenger seated
 extern Semaphore* rideOver[NUM_CARS];			// (signal) ride over
 
 extern DClock* dc;
-extern Semaphore* deltaClockMutex;
+extern Semaphore* DClockMutex;
 
 Semaphore* getPassenger;
 Semaphore* seatTaken;
@@ -289,11 +289,8 @@ int P3_visitorTask(int argc, char* argv[]) {
 	semSignal(parkMutex);															SWAP;
 
 	ticketBooth(visitorId);															SWAP;
-
 	museum(visitorId);																SWAP;
-
 	tourCar(visitorId);																SWAP;
-
 	giftShop(visitorId);															SWAP;
 }
 
@@ -308,10 +305,6 @@ void ticketBooth(int visitorId){
 	SEM_WAIT(driverMutex);															SWAP;
 	SEM_SIGNAL(needTicket);															SWAP;
 	SEM_SIGNAL(driver);																SWAP;
-	//Wait randomly before taking ticket and giving to visitor
-	//waitTime = rand() % (MAX_LINE_TIME * 10) + 1;			SWAP;
-	//insert(dc, waitTime, timeEvent[visitorId]);			SWAP;
-	//semWait(timeEvent[visitorId]);			SWAP;
 	SEM_WAIT(takeTicket);															SWAP;
 	SEM_SIGNAL(driverMutex);														SWAP;
 

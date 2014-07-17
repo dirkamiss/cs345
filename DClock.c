@@ -24,59 +24,59 @@ void deleteDClock(DClock* dc) {
 }
 
 void printClock(DClock* dc) {
-	printf("**");			SWAP;
+	printf("**");												SWAP;
 
-	DClockItem* cur = dc->head;			SWAP;
+	DClockItem* cur = dc->head;									SWAP;
 
 	while (cur) {
-		printf("{%d} ", cur->tics);			SWAP;
-		cur = cur->next;			SWAP;
+		printf("{%d} ", cur->tics);								SWAP;
+		cur = cur->next;										SWAP;
 	}
 
-	printf("**\n");			SWAP;
+	printf("**\n");												SWAP;
 }
 
 void insert(DClock* dc, int tics, Semaphore* event) {
 	assert("Invalid tic count" && tics > 0);
 	semWait(DClockMutex);
-	DClockItem* item = (DClockItem*)malloc(sizeof(DClockItem));			SWAP;
-	item->event = event;			SWAP;
-	item->next = NULL;			SWAP;
+	DClockItem* item = (DClockItem*)malloc(sizeof(DClockItem));	SWAP;
+	item->event = event;										SWAP;
+	item->next = NULL;											SWAP;
 
 	if (!dc->head) {
-		item->tics = tics;			SWAP;
-		dc->head = item;			SWAP;
+		item->tics = tics;										SWAP;
+		dc->head = item;										SWAP;
 	}
 	else if (tics < dc->head->tics) {
-		item->tics = tics;			SWAP;
-		dc->head->tics -= tics;			SWAP;
-		item->next = dc->head;			SWAP;
-		dc->head = item;			SWAP;
+		item->tics = tics;										SWAP;
+		dc->head->tics -= tics;									SWAP;
+		item->next = dc->head;									SWAP;
+		dc->head = item;										SWAP;
 	}
 	else {
-		int diff = tics - dc->head->tics;			SWAP;
-		DClockItem* prev = dc->head;			SWAP;
-		DClockItem* cur = dc->head->next;			SWAP;
+		int diff = tics - dc->head->tics;						SWAP;
+		DClockItem* prev = dc->head;							SWAP;
+		DClockItem* cur = dc->head->next;						SWAP;
 
 		while (1) {
 			if (!cur) {
-				prev->next = item;			SWAP;
-				item->tics = diff;			SWAP;
-				break;			SWAP;
+				prev->next = item;								SWAP;
+				item->tics = diff;								SWAP;
+				break;											SWAP;
 			}
 
-			diff -= cur->tics;			SWAP;
+			diff -= cur->tics;									SWAP;
 
 			if (diff < 0) {
-				item->tics = diff + cur->tics;			SWAP;
-				cur->tics = -diff;			SWAP;
-				item->next = cur;			SWAP;
-				prev->next = item;			SWAP;
-				break;			SWAP;
+				item->tics = diff + cur->tics;					SWAP;
+				cur->tics = -diff;								SWAP;
+				item->next = cur;								SWAP;
+				prev->next = item;								SWAP;
+				break;											SWAP;
 			}
 
-			prev = prev->next;			SWAP;
-			cur = cur->next;			SWAP;
+			prev = prev->next;									SWAP;
+			cur = cur->next;									SWAP;
 		}
 	}
 	semSignal(DClockMutex);

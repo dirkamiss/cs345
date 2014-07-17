@@ -229,11 +229,6 @@ static void timer_isr()
 	myClkTime = clock();
 	if ((myClkTime - myOldClkTime) >= ONE_TENTH_SEC)
 	{
-		//if (!deltaClk->mutexLock)
-		//SEM_WAIT(deltaClkMutex);
-		//decrementDeltaClock(dcq);
-		//SEM_SIGNAL(deltaClkMutex);
-
 		myOldClkTime = myOldClkTime + ONE_TENTH_SEC; // update old
 		semSignal(tics10thsec);
 		tic(dc);
