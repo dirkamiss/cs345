@@ -1,4 +1,4 @@
-// os345p6.c - FAT File Management System
+ï»¿// os345p6.c - FAT File Management System
 // ***********************************************************************
 // **   DISCLAMER ** DISCLAMER ** DISCLAMER ** DISCLAMER ** DISCLAMER   **
 // **                                                                   **
@@ -40,36 +40,36 @@ extern TCB tcb[];						// task control block
 extern int curTask;						// current task #
 extern bool diskMounted;				// disk has been mounted
 
-FMSERROR FMSErrors[NUM_ERRORS]   = {
-                              {ERR50, ERR50_MSG},  // Invalid File Name
-                              {ERR51, ERR51_MSG},  // Invalid File Type
-                              {ERR52, ERR52_MSG},  // Invalid File Descriptor
-                              {ERR53, ERR53_MSG},  // Invalid Sector Number
-                              {ERR54, ERR54_MSG},  // Invalid FAT Chain
-                              {ERR55, ERR55_MSG},  // Invalid Directory
+FMSERROR FMSErrors[NUM_ERRORS] = {
+	{ ERR50, ERR50_MSG },  // Invalid File Name
+	{ ERR51, ERR51_MSG },  // Invalid File Type
+	{ ERR52, ERR52_MSG },  // Invalid File Descriptor
+	{ ERR53, ERR53_MSG },  // Invalid Sector Number
+	{ ERR54, ERR54_MSG },  // Invalid FAT Chain
+	{ ERR55, ERR55_MSG },  // Invalid Directory
 
-                              {ERR60, ERR60_MSG},  // File Already Defined
-                              {ERR61, ERR61_MSG},  // File Not Defined
-                              {ERR62, ERR62_MSG},  // File Already Open
-                              {ERR63, ERR63_MSG},  // File Not Open
-                              {ERR64, ERR64_MSG},  // File Directory Full
-                              {ERR65, ERR65_MSG},  // File Space Full
-                              {ERR66, ERR66_MSG},  // End-Of-File
-                              {ERR67, ERR67_MSG},  // End-Of-Directory
-                              {ERR68, ERR68_MSG},  // Directory Not Found
-                              {ERR69, ERR69_MSG},  // Can Not Delete
+	{ ERR60, ERR60_MSG },  // File Already Defined
+	{ ERR61, ERR61_MSG },  // File Not Defined
+	{ ERR62, ERR62_MSG },  // File Already Open
+	{ ERR63, ERR63_MSG },  // File Not Open
+	{ ERR64, ERR64_MSG },  // File Directory Full
+	{ ERR65, ERR65_MSG },  // File Space Full
+	{ ERR66, ERR66_MSG },  // End-Of-File
+	{ ERR67, ERR67_MSG },  // End-Of-Directory
+	{ ERR68, ERR68_MSG },  // Directory Not Found
+	{ ERR69, ERR69_MSG },  // Can Not Delete
 
-                              {ERR70, ERR70_MSG},  // Too Many Files Open
-                              {ERR71, ERR71_MSG},  // Not Enough Contiguous Space
-                              {ERR72, ERR72_MSG},  // Disk Not Mounted
+	{ ERR70, ERR70_MSG },  // Too Many Files Open
+	{ ERR71, ERR71_MSG },  // Not Enough Contiguous Space
+	{ ERR72, ERR72_MSG },  // Disk Not Mounted
 
-                              {ERR80, ERR80_MSG},  // File Seek Error
-                              {ERR81, ERR81_MSG},  // File Locked
-                              {ERR82, ERR82_MSG},  // File Delete Protected
-                              {ERR83, ERR83_MSG},  // File Write Protected
-                              {ERR84, ERR84_MSG},  // Read Only File
-                              {ERR85, ERR85_MSG}   // Illegal Access
-                   };
+	{ ERR80, ERR80_MSG },  // File Seek Error
+	{ ERR81, ERR81_MSG },  // File Locked
+	{ ERR82, ERR82_MSG },  // File Delete Protected
+	{ ERR83, ERR83_MSG },  // File Write Protected
+	{ ERR84, ERR84_MSG },  // Read Only File
+	{ ERR85, ERR85_MSG }   // Illegal Access
+};
 
 int sectorReads;
 int sectorWrites;
@@ -88,7 +88,7 @@ int sectorWrites;
 //
 int P6_project6(int argc, char* argv[])
 {
-	char* newArgv[] = { {"finalTest"}, {"All"} };
+	char* newArgv[] = { { "finalTest" }, { "All" } };
 
 	if (sizeof(DirEntry) != 32)
 	{
@@ -151,7 +151,7 @@ int P6_dir(int argc, char* argv[])		// list directory
 		return 0;
 	}
 	if (argc < 2) strcpy(mask, "*.*");
-		else strcpy(mask, argv[1]);
+	else strcpy(mask, argv[1]);
 
 	//dumpRAMDisk("Root Directory", 19*512, 19*512+256);
 	printf("\nName:ext                time      date    cluster  size");
@@ -215,46 +215,46 @@ int P6_dfat(int argc, char* argv[])		// list FAT table
 	}
 	switch (argc)
 	{
-		case 1:						//	1	fat					output fat 1 table
-		{
-			printFatEntries("FAT1", start, end);
-		}
+	case 1:						//	1	fat					output fat 1 table
+	{
+									printFatEntries("FAT1", start, end);
+	}
 
-		case 2:						//	2	fat <1 to 2>		output fat <#> table
-		{
-			char buf[32];
-			index = INTEGER(argv[1]);
-			if ((index == 1) || (index ==2))
-			{
-				sprintf(buf, "Disk Image: FAT %d", index);
-				dumpRAMDisk(buf, (1+index*8)*512, (1+index*8)*512+64);
-			}
-			else
-			{
-				outFatEntry(index);
-			}
-			break;
-		}
+	case 2:						//	2	fat <1 to 2>		output fat <#> table
+	{
+									char buf[32];
+									index = INTEGER(argv[1]);
+									if ((index == 1) || (index == 2))
+									{
+										sprintf(buf, "Disk Image: FAT %d", index);
+										dumpRAMDisk(buf, (1 + index * 8) * 512, (1 + index * 8) * 512 + 64);
+									}
+									else
+									{
+										outFatEntry(index);
+									}
+									break;
+	}
 
-		case 3:						//	3	fat <#>,<s>			output fat table <#> starting with entry <s>
-		{
-			char* FATtb = (INTEGER(argv[1]) == 2) ? FAT2 : FAT1;
-			start = INTEGER(argv[2]);
-			end = start + 1;
+	case 3:						//	3	fat <#>,<s>			output fat table <#> starting with entry <s>
+	{
+									char* FATtb = (INTEGER(argv[1]) == 2) ? FAT2 : FAT1;
+									start = INTEGER(argv[2]);
+									end = start + 1;
 
-			for (index=start; start<end; index++) outFatEntry(index);
-			break;
-		}
+									for (index = start; start<end; index++) outFatEntry(index);
+									break;
+	}
 
-		case 4:						//	4	fat <#>,<s>,<e>	output fat table <#> from <s> to <e>
-		{
-			char* FATtb = (INTEGER(argv[1]) == 2) ? FAT2 : FAT1;
-			start = INTEGER(argv[2]);
-			end = INTEGER(argv[3]);
+	case 4:						//	4	fat <#>,<s>,<e>	output fat table <#> from <s> to <e>
+	{
+									char* FATtb = (INTEGER(argv[1]) == 2) ? FAT2 : FAT1;
+									start = INTEGER(argv[2]);
+									end = INTEGER(argv[3]);
 
-			for (index=start; start<end; index++) outFatEntry(index);
-			break;
-		}
+									for (index = start; start<end; index++) outFatEntry(index);
+									break;
+	}
 
 	}
 	return 0;
@@ -270,12 +270,12 @@ int P6_mount(int argc, char* argv[])		// mount RAM disk
 {
 	int error;
 	BSStruct bootSector;
-	char temp[128] = {""};
+	char temp[128] = { "" };
 
 	assert("64-bit" && (sizeof(DirEntry) == 32));
 
 	if (argc < 2) strcat(temp, "c:/lcc/projects/disk4");
-		else strcat(temp, argv[1]);
+	else strcat(temp, argv[1]);
 	printf("\nMount Disk \"%s\"", temp);
 
 	error = fmsMount(temp, &RAMDisk);
@@ -311,7 +311,7 @@ int P6_mount(int argc, char* argv[])		// mount RAM disk
 int P6_run(int argc, char* argv[])		// run lc3 program from RAM disk
 {
 	char fileName[128];
-	char* myArgv[] = {"1", ""};
+	char* myArgv[] = { "1", "" };
 
 	if (!diskMounted)
 	{
@@ -326,11 +326,11 @@ int P6_run(int argc, char* argv[])		// run lc3 program from RAM disk
 	strcpy(fileName, argv[1]);
 	if (!strstr(fileName, ".hex")) strcat(fileName, ".hex");
 	myArgv[1] = (char*)&fileName;
-	createTask( myArgv[0],				// task name
-					lc3Task,					// task
-					MED_PRIORITY,			// task priority
-					2,							// task argc
-					myArgv);					// task arguments
+	createTask(myArgv[0],				// task name
+		lc3Task,					// task
+		MED_PRIORITY,			// task priority
+		2,							// task argc
+		myArgv);					// task arguments
 	return 0;
 } // end P6_run
 
@@ -415,12 +415,14 @@ int P6_copy(int argc, char* argv[])		 	// copy file
 	}
 	// open source file
 	if ((FDs = fmsOpenFile(argv[1], 0)) < 0)
-	{	fmsError(FDs);
+	{
+		fmsError(FDs);
 		return 0;
 	}
 	// open destination file
 	if ((FDd = fmsOpenFile(argv[2], 1)) < 0)
-	{	fmsCloseFile(FDs);
+	{
+		fmsCloseFile(FDs);
 		fmsError(FDd);
 		return 0;
 	}
@@ -571,7 +573,7 @@ int P6_dumpSector(int argc, char* argv[])	// dump RAM disk sector
 	sector = INTEGER(argv[1]);
 
 	sprintf(temp, "Sector %d:", sector);
-	dumpRAMDisk(temp, sector*512, sector*512 + 512);
+	dumpRAMDisk(temp, sector * 512, sector * 512 + 512);
 	return 0;
 } // end P6_dumpSector
 
@@ -591,7 +593,7 @@ int P6_fileSlots(int argc, char* argv[])	// list open file slots
 		fdEntry = &OFTable[fd];
 		if (fdEntry->name[0] == 0) continue;      // open slot
 		printf("\n %2d   ", fd);
-		for (i=0; i<12; i++) printf("%c", fdEntry->name[i]);
+		for (i = 0; i<12; i++) printf("%c", fdEntry->name[i]);
 		printf("  %02x%6ld%6d%6d%6d%6d%6d%6d%6ld",
 			fdEntry->attributes,
 			fdEntry->fileSize,
@@ -617,35 +619,35 @@ void printDirectoryEntry(DirEntry* dirent)
 {
 	int i = 7;
 	char p_string[64] = "              ------  00:00:00 03/01/2004";
-   FATDate date;											// The Date bit field structure
-   FATTime time;											// The Time bit field structure
+	FATDate date;											// The Date bit field structure
+	FATTime time;											// The Time bit field structure
 
-   strncpy(p_string, (char*)&(dirent->name), 8);	// Copies 8 bytes from the name
+	strncpy(p_string, (char*)&(dirent->name), 8);	// Copies 8 bytes from the name
 	while (p_string[i] == ' ') i--;
-	p_string[i+1] = '.';									// Add extension
-	strncpy(&p_string[i+2], (char*)&(dirent->extension), 3);
-	while (p_string[i+4] == ' ') i--;
-	if (p_string[i+4] == '.') p_string[i+4] = ' ';
+	p_string[i + 1] = '.';									// Add extension
+	strncpy(&p_string[i + 2], (char*)&(dirent->extension), 3);
+	while (p_string[i + 4] == ' ') i--;
+	if (p_string[i + 4] == '.') p_string[i + 4] = ' ';
 
-   // Generate the attributes
-   if(dirent->attributes & 0x01) p_string[14] = 'R';
-   if(dirent->attributes & 0x02) p_string[15] = 'H';
-   if(dirent->attributes & 0x04) p_string[16] = 'S';
-   if(dirent->attributes & 0x08) p_string[17] = 'V';
-   if(dirent->attributes & 0x10) p_string[18] = 'D';
-   if(dirent->attributes & 0x20) p_string[19] = 'A';
+	// Generate the attributes
+	if (dirent->attributes & 0x01) p_string[14] = 'R';
+	if (dirent->attributes & 0x02) p_string[15] = 'H';
+	if (dirent->attributes & 0x04) p_string[16] = 'S';
+	if (dirent->attributes & 0x08) p_string[17] = 'V';
+	if (dirent->attributes & 0x10) p_string[18] = 'D';
+	if (dirent->attributes & 0x20) p_string[19] = 'A';
 
-   // Extract the time and format it into the string...
-   memcpy(&time, &(dirent->time), sizeof(FATTime));
-   sprintf(&p_string[22], "%02d:%02d:%02d  ", time.hour, time.min, time.sec*2);
+	// Extract the time and format it into the string...
+	memcpy(&time, &(dirent->time), sizeof(FATTime));
+	sprintf(&p_string[22], "%02d:%02d:%02d  ", time.hour, time.min, time.sec * 2);
 
-   // Extract the date and format it as well, inserting it into the string...
-   memcpy(&date, &(dirent->date), sizeof(FATDate));
-   sprintf(&p_string[31], "%02d/%02d/%04d %5d %5lu",
-  				date.month+1, date.day, date.year+1980,
-			   dirent->startCluster, dirent->fileSize);
+	// Extract the date and format it as well, inserting it into the string...
+	memcpy(&date, &(dirent->date), sizeof(FATDate));
+	sprintf(&p_string[31], "%02d/%02d/%04d %5d %5lu",
+		date.month + 1, date.day, date.year + 1980,
+		dirent->startCluster, dirent->fileSize);
 
-   // p_string is now ready!
+	// p_string is now ready!
 	printf("\n%s", p_string);
 	return;
 } // end PrintDirectoryEntry
@@ -664,23 +666,23 @@ void printFatEntries(unsigned char* FAT, int start, int end)
 	if (end < nn) nn = end;
 
 	sprintf(fbuf, "\n    %6d:", start);
-	for (i=start; i<nn; i++)
+	for (i = start; i<nn; i++)
 	{
-		if (!(counter%10) && counter)
+		if (!(counter % 10) && counter)
 		{
 			printf("%s", fbuf);
 			sprintf(fbuf, "\n    %6d:", i);
 		}
-      	fatvalue = getFatEntry(i, FAT);
-      	// Special formatting cases...
-      	if (i < 2) sprintf(tbuf, " RSRV"); 							// A reserved cluster
-      	else if (fatvalue == FAT_EOC) sprintf(tbuf, "  EOC"); // The EOC marker
-      	else if (fatvalue == FAT_BAD) sprintf(tbuf, "  BAD"); // The BAD cluster marker
-      	else sprintf(tbuf, "%5d", fatvalue);
+		fatvalue = getFatEntry(i, FAT);
+		// Special formatting cases...
+		if (i < 2) sprintf(tbuf, " RSRV"); 							// A reserved cluster
+		else if (fatvalue == FAT_EOC) sprintf(tbuf, "  EOC"); // The EOC marker
+		else if (fatvalue == FAT_BAD) sprintf(tbuf, "  BAD"); // The BAD cluster marker
+		else sprintf(tbuf, "%5d", fatvalue);
 		strcat(fbuf, tbuf);
 		counter++;
 	}
-	if (counter%10) printf("%s", fbuf);
+	if (counter % 10) printf("%s", fbuf);
 	return;
 } // End PrintFatTable
 
@@ -690,26 +692,26 @@ void printFatEntries(unsigned char* FAT, int start, int end)
 // dm <sa> <ea> - dump dumpRAMDisk memory
 void dumpRAMDisk(char *s, int sa, int ea)
 {
-   int i, ma;
-   unsigned char j;
+	int i, ma;
+	unsigned char j;
 
-   printf("\n%s", s);
-   for (ma = sa; ma < ea; ma+=16)
+	printf("\n%s", s);
+	for (ma = sa; ma < ea; ma += 16)
 	{
 		printf("\n0x%08x:", ma);
-		for (i=0; i<16; i++)
+		for (i = 0; i<16; i++)
 		{
-			printf(" %02x", (unsigned char)RAMDisk[ma+i]);
+			printf(" %02x", (unsigned char)RAMDisk[ma + i]);
 		}
-      printf("  ");
-      for (i=0; i<16; i++)
-      {
-         j = RAMDisk[ma+i];
-         if ((j<20) || (j>127)) j='.';
-         printf("%c", j);
-      }
+		printf("  ");
+		for (i = 0; i<16; i++)
+		{
+			j = RAMDisk[ma + i];
+			if ((j<20) || (j>127)) j = '.';
+			printf("%c", j);
+		}
 	}
-   return;
+	return;
 } // end dumpRAMDisk
 
 
@@ -752,15 +754,15 @@ int P6_chkdsk(int argc, char* argv[])		// check RAM disk
 	}
 	printf("\nChecking disk...");
 	// set fat if cluster allocated
-	for (i=2; i<CLUSTERS_PER_DISK; i++)
+	for (i = 2; i<CLUSTERS_PER_DISK; i++)
 	{
-		fat[i] = getFatEntry(i,ckFAT1) ? 1 : 0;
+		fat[i] = getFatEntry(i, ckFAT1) ? 1 : 0;
 	}
 	// process all directory entries
 	checkDirectory("Root", fat, 0);
 	// check to see if there are any zombie clusters
 	j = 0;
-	for (i=2; i<CLUSTERS_PER_DISK; i++)
+	for (i = 2; i<CLUSTERS_PER_DISK; i++)
 	{
 		if (fat[i])
 		{
@@ -780,12 +782,12 @@ int P6_chkdsk(int argc, char* argv[])		// check RAM disk
 	}
 	if (j) printf("-%d", j);
 	// reconcile fat tables
-	for (i=0; i<CLUSTERS_PER_DISK; i++)
+	for (i = 0; i<CLUSTERS_PER_DISK; i++)
 	{
-		if (getFatEntry(i,ckFAT1) != getFatEntry(i,ckFAT2))
+		if (getFatEntry(i, ckFAT1) != getFatEntry(i, ckFAT2))
 		{
 			printf("\n  FAT1[%d] != FAT2[%d] (%d/%d)",
-		  		i, i, getFatEntry(i,ckFAT1), getFatEntry(i,ckFAT2));
+				i, i, getFatEntry(i, ckFAT1), getFatEntry(i, ckFAT2));
 		}
 	}
 	return 0;
@@ -806,7 +808,7 @@ void getFileName(char* fileName, DirEntry* dirEntry)
 	int i = 7;
 
 	memset(fileName, 0, 16);
-   strncpy(fileName, (char*)&(dirEntry->name), 8);	// Copies 8 bytes from the name
+	strncpy(fileName, (char*)&(dirEntry->name), 8);	// Copies 8 bytes from the name
 	i = strlen(fileName) - 1;
 	while (fileName[i] == ' ') i--;
 	fileName[++i] = '.';									// Add extension
@@ -908,9 +910,9 @@ void checkDirectory(char* dirName, unsigned char fat[], int dir)
 				}
 				// mark cluster as used, get next cluster
 				fat[i] = 0;
-				i = getFatEntry(i,ckFAT1);
-	         if (i == FAT_EOC) break;	   // EOD
-	         if (i == FAT_BAD) break;
+				i = getFatEntry(i, ckFAT1);
+				if (i == FAT_EOC) break;	   // EOD
+				if (i == FAT_BAD) break;
 			}
 		}
 		// if no loop and directory, then recurse
@@ -970,7 +972,7 @@ int P6_finalTest(int argc, char* argv[])
 	else
 	{
 		flags = 0;
-		for (i=1; i<argc; i++)
+		for (i = 1; i<argc; i++)
 		{
 			flags |= 1 << (INTEGER(argv[i]) - 1);
 			printf("\n  Run test #%d", INTEGER(argv[i]));
@@ -980,9 +982,9 @@ int P6_finalTest(int argc, char* argv[])
 
 	sectorReads = 0;
 	sectorWrites = 0;
-	for (i=1; i<=numTests; i++)
+	for (i = 1; i <= numTests; i++)
 	{
-		if (flags & (1 << (i-1)))
+		if (flags & (1 << (i - 1)))
 		{
 			if (fmsTests(i, finalDebug))
 			{
@@ -1010,233 +1012,240 @@ int fmsTests(int test, bool debug)
 	char result[] = "Now is the time for all good men to come to the aid of their country.";
 	int i, error;
 	int tFID[numFiles];
-	char* text[numWords] = {"Now ", "is ", "the ", "time ", "for ",
-									"all ", "good ", "men ", "to ", "come ",
-									"to ", "the ", "aid ", "of ", "their ",
-									"country." };
+	char* text[numWords] = { "Now ", "is ", "the ", "time ", "for ",
+		"all ", "good ", "men ", "to ", "come ",
+		"to ", "the ", "aid ", "of ", "their ",
+		"country." };
 	switch (test)
 	{
-		case 1:					// file creation
-		{
-			printf("\nRunning Test 1...");
-			// create numDirs directories in current directory
-			printf("\n  Define %d directories...", numDirs);
-			for (i=0; i<numDirs; i++)
-			{	sprintf(buf, "dfile%d", i);
-				if (debug) printf("\n   fmsDefineFile(\"%s\")", buf);
-				try(fmsDefineFile(buf, DIRECTORY));
-			}
+	case 1:					// file creation
+	{
+								printf("\nRunning Test 1...");
+								// create numDirs directories in current directory
+								printf("\n  Define %d directories...", numDirs);
+								for (i = 0; i<numDirs; i++)
+								{
+									sprintf(buf, "dfile%d", i);
+									if (debug) printf("\n   fmsDefineFile(\"%s\")", buf);
+									try(fmsDefineFile(buf, DIRECTORY));
+								}
 
-			// create numFiles files in current directory
-			printf("\n  Define %d files...", numFiles);
-			for (i=0; i<numFiles; i++)
-			{	sprintf(buf, "file%d.txt", i);
-				if (debug) printf("\n   fmsDefineFile(\"%s\")", buf);
-				try(fmsDefineFile(buf, ARCHIVE));
-			}
-			break;
-		}
+								// create numFiles files in current directory
+								printf("\n  Define %d files...", numFiles);
+								for (i = 0; i<numFiles; i++)
+								{
+									sprintf(buf, "file%d.txt", i);
+									if (debug) printf("\n   fmsDefineFile(\"%s\")", buf);
+									try(fmsDefineFile(buf, ARCHIVE));
+								}
+								break;
+	}
 
-		case 2:					// open files
-		{
-			printf("\nRunning Test 2...");
-			// try to open numFiles files for read/write access
-			// note: the number of open files is limited to the number of file slots
-			printf("\n  Open %d files...", numFiles);
-			for (i=0; i<numFiles; i++)
-			{
-				sprintf(buf, "file%d.txt", i);
-				if ((tFID[i] = fmsOpenFile(buf, OPEN_RDWR)) < 0)
-				{	if (i == NFILES) break;
-					FERROR("\nFailed fmsOpenFile(\"%s\") with R/W",buf,tFID[i]);
-				}
-			}
-			// write a word to each file, rewind the files (seek to 0), read and print word
-			for (i=0; i<numWords; i++)
-			{
-				if (debug) printf("\n   fmsWriteFile(tFID[%d], \"%s\", %d)", i, text[i], strlen(text[i]));
-				try(fmsWriteFile(tFID[i],text[i],strlen(text[i])));
-			}
-			// seek to beginning of files
-			for (i=0; i<numWords; i++)
-			{
-				try(fmsSeekFile(tFID[i],0));
-				if (debug) printf("\n   fmsSeekFile(tFID[%d], 0) = %d", i, error);
-			}
-			// read from numWords files
-			rBuf[0] = 0;
-			for (i=0; i<numWords; i++)
-			{
-				try(fmsReadFile(tFID[i], buf, strlen(text[i])));
-				strncat(rBuf, buf, strlen(text[i]));
-			}
-			printf("\n  %s", rBuf);
+	case 2:					// open files
+	{
+								printf("\nRunning Test 2...");
+								// try to open numFiles files for read/write access
+								// note: the number of open files is limited to the number of file slots
+								printf("\n  Open %d files...", numFiles);
+								for (i = 0; i<numFiles; i++)
+								{
+									sprintf(buf, "file%d.txt", i);
+									if ((tFID[i] = fmsOpenFile(buf, OPEN_RDWR)) < 0)
+									{
+										if (i == NFILES) break;
+										FERROR("\nFailed fmsOpenFile(\"%s\") with R/W", buf, tFID[i]);
+									}
+								}
+								// write a word to each file, rewind the files (seek to 0), read and print word
+								for (i = 0; i<numWords; i++)
+								{
+									if (debug) printf("\n   fmsWriteFile(tFID[%d], \"%s\", %d)", i, text[i], strlen(text[i]));
+									try(fmsWriteFile(tFID[i], text[i], strlen(text[i])));
+								}
+								// seek to beginning of files
+								for (i = 0; i<numWords; i++)
+								{
+									try(fmsSeekFile(tFID[i], 0));
+									if (debug) printf("\n   fmsSeekFile(tFID[%d], 0) = %d", i, error);
+								}
+								// read from numWords files
+								rBuf[0] = 0;
+								for (i = 0; i<numWords; i++)
+								{
+									try(fmsReadFile(tFID[i], buf, strlen(text[i])));
+									strncat(rBuf, buf, strlen(text[i]));
+								}
+								printf("\n  %s", rBuf);
 
-			// close files
-			for (i=0; i<NFILES; i++)
-			{
-				if (debug) printf("\n  fmsCloseFile(%d)", tFID[i]);
-				try(fmsCloseFile(tFID[i]));
-			}
-			return strcmp(rBuf, result);
-		}
+								// close files
+								for (i = 0; i<NFILES; i++)
+								{
+									if (debug) printf("\n  fmsCloseFile(%d)", tFID[i]);
+									try(fmsCloseFile(tFID[i]));
+								}
+								return strcmp(rBuf, result);
+	}
 
-		case 3:
-		{
-			// close/open word file and append to test2 file
-			// then print test2 file
-			int test2 = numFiles < NFILES ? numFiles-1 : NFILES-1;
-			printf("\nRunning Test 3...");
-			sprintf(buf2, "file%d.txt", test2);
-			for (i=0; i<numWords; i++)
-			{
-				sprintf(buf, "file%d.txt", i);
-				// open word file
-				if (debug) printf("\n  fmsOpenFile(%s, OPEN_READ)", buf);
-				try(tFID[i] = fmsOpenFile(buf, OPEN_READ));
-				// open test2 file for appending
-				if (debug) printf("\n  fmsOpenFile(%s, OPEN_APPEND)", buf2);
-				try(tFID[test2] = fmsOpenFile(buf2, OPEN_APPEND));
-				// read word from word file
-				try(fmsReadFile(tFID[i], buf, strlen(text[i])));
-				// write to buffer
-				try(fmsWriteFile(tFID[test2], buf, strlen(text[i])));
-				// close word file
-				if (debug) printf("\n  fmsCloseFile(%d)", tFID[i]);
-				try(fmsCloseFile(tFID[i]));
-				// close test2 file
-				if (debug) printf("\n  fmsCloseFile(%d)", test2);
-				try(fmsCloseFile(tFID[test2]));
-			}
-			// read and print test2 file
-			try(tFID[test2] = fmsOpenFile(buf2, OPEN_READ));
-			rBuf[0] = 0;
-			while ((error = fmsReadFile(tFID[test2], buf, 1)) > 0) strncat(rBuf, buf, 1);
-			if ((error < 0) & (error != ERR66))
-				FERROR("\nFailed fmsReadFile(%d)",tFID[test2],error);
-			printf("\n  %s", rBuf);
+	case 3:
+	{
+			  // close/open word file and append to test2 file
+			  // then print test2 file
+			  int test2 = numFiles < NFILES ? numFiles - 1 : NFILES - 1;
+			  printf("\nRunning Test 3...");
+			  sprintf(buf2, "file%d.txt", test2);
+			  for (i = 0; i<numWords; i++)
+			  {
+				  sprintf(buf, "file%d.txt", i);
+				  // open word file
+				  if (debug) printf("\n  fmsOpenFile(%s, OPEN_READ)", buf);
+				  try(tFID[i] = fmsOpenFile(buf, OPEN_READ));
+				  // open test2 file for appending
+				  if (debug) printf("\n  fmsOpenFile(%s, OPEN_APPEND)", buf2);
+				  try(tFID[test2] = fmsOpenFile(buf2, OPEN_APPEND));
+				  // read word from word file
+				  try(fmsReadFile(tFID[i], buf, strlen(text[i])));
+				  // write to buffer
+				  try(fmsWriteFile(tFID[test2], buf, strlen(text[i])));
+				  // close word file
+				  if (debug) printf("\n  fmsCloseFile(%d)", tFID[i]);
+				  try(fmsCloseFile(tFID[i]));
+				  // close test2 file
+				  if (debug) printf("\n  fmsCloseFile(%d)", test2);
+				  try(fmsCloseFile(tFID[test2]));
+			  }
+			  // read and print test2 file
+			  try(tFID[test2] = fmsOpenFile(buf2, OPEN_READ));
+			  rBuf[0] = 0;
+			  while ((error = fmsReadFile(tFID[test2], buf, 1)) > 0) strncat(rBuf, buf, 1);
+			  if ((error < 0) & (error != ERR66))
+				  FERROR("\nFailed fmsReadFile(%d)", tFID[test2], error);
+			  printf("\n  %s", rBuf);
 
-			if (debug) printf("\n  fmsCloseFile(%d)", test2);
-			try(fmsCloseFile(tFID[test2]));
-			return strcmp(rBuf, result);
-		}
+			  if (debug) printf("\n  fmsCloseFile(%d)", test2);
+			  try(fmsCloseFile(tFID[test2]));
+			  return strcmp(rBuf, result);
+	}
 
-		case 4:
-		{
-			int test3 = numFiles < NFILES ? numFiles-2 : NFILES-2;
-			int t3FID;
-			int fileSize = 10*512;
-			int index[numWords] =  {510, 20, 5120, 1024, 0, 4095, 4000, 5000,
-											100, 5090, 3000, 2000, 1535, 3100, 1900, 4500 };
-			// write X's to test3 file
-			// seek and write test words throughout test3 file
-			// seek/read/print test words from test3 file
-			printf("\nRunning Test 4...");
-			sprintf(buf2, "file%d.txt", test3);
+	case 4:
+	{
+			  int test3 = numFiles < NFILES ? numFiles - 2 : NFILES - 2;
+			  int t3FID;
+			  int fileSize = 10 * 512;
+			  int index[numWords] = { 510, 20, 5120, 1024, 0, 4095, 4000, 5000,
+				  100, 5090, 3000, 2000, 1535, 3100, 1900, 4500 };
+			  // write X's to test3 file
+			  // seek and write test words throughout test3 file
+			  // seek/read/print test words from test3 file
+			  printf("\nRunning Test 4...");
+			  sprintf(buf2, "file%d.txt", test3);
 
-			if (debug) printf("\n  fmsOpenFile(\"%s\", %d)", buf2, OPEN_RDWR);
-			try(t3FID = fmsOpenFile(buf2, OPEN_RDWR));
+			  if (debug) printf("\n  fmsOpenFile(\"%s\", %d)", buf2, OPEN_RDWR);
+			  try(t3FID = fmsOpenFile(buf2, OPEN_RDWR));
 
-			// write file with X's
-			if (debug) printf("\n  Write %d X's to \"%s\"", fileSize, buf2);
-			for (i=0; i<fileSize; i++)
-			{
-				try(fmsWriteFile(t3FID, "X", 1));
-			}
+			  // write file with X's
+			  if (debug) printf("\n  Write %d X's to \"%s\"", fileSize, buf2);
+			  for (i = 0; i<fileSize; i++)
+			  {
+				  try(fmsWriteFile(t3FID, "X", 1));
+			  }
 
-			// seek to write text
-			for (i=0; i<numWords; i++)
-			{
-				if (debug) printf("\n  Write \"%s\" to position %d", text[i], index[i]);
-				try(fmsSeekFile(t3FID, index[i]));
-				try(fmsWriteFile(t3FID, text[i], strlen(text[i])));
-			}
+			  // seek to write text
+			  for (i = 0; i<numWords; i++)
+			  {
+				  if (debug) printf("\n  Write \"%s\" to position %d", text[i], index[i]);
+				  try(fmsSeekFile(t3FID, index[i]));
+				  try(fmsWriteFile(t3FID, text[i], strlen(text[i])));
+			  }
 
-			// seek to read file
-			rBuf[0] = 0;
-			for (i=0; i<numWords; i++)
-			{	//memset(buf, 0, sizeof(buf));
-				try(fmsSeekFile(t3FID, index[i]));
-				if ((error = fmsReadFile(t3FID, buf, strlen(text[i]))) > 0)
-					strncat(rBuf, buf, strlen(text[i]));
-				if (error <= 0) FERROR("\nFailed fmsReadFile(%d)",t3FID,error);
-			}
-			printf("\n  %s", rBuf);
+			  // seek to read file
+			  rBuf[0] = 0;
+			  for (i = 0; i<numWords; i++)
+			  {	//memset(buf, 0, sizeof(buf));
+				  try(fmsSeekFile(t3FID, index[i]));
+				  if ((error = fmsReadFile(t3FID, buf, strlen(text[i]))) > 0)
+					  strncat(rBuf, buf, strlen(text[i]));
+				  if (error <= 0) FERROR("\nFailed fmsReadFile(%d)", t3FID, error);
+			  }
+			  printf("\n  %s", rBuf);
 
-			if (debug) printf("\n  fmsCloseFile(%d)", t3FID);
-			try(fmsCloseFile(t3FID));
-			return strcmp(rBuf, result);
-		}
+			  if (debug) printf("\n  fmsCloseFile(%d)", t3FID);
+			  try(fmsCloseFile(t3FID));
+			  return strcmp(rBuf, result);
+	}
 
-		case 5:
-		{
-			printf("\nRunning Test 5...");
-			// define test directory
-			strcpy(buf, "TESTDIR");
-			printf("\n  fmsMakeDirectory(\"%s\")", buf);
-			try(fmsDefineFile(buf, DIRECTORY));
-			// change directories
-			printf("\n  fmsChangeDir(\"%s\")", buf);
-			try(fmsChangeDir(buf));
-			// create numFiles files in current directory
-			printf("\n  Define %d files...", numFiles);
-			for (i=0; i<numFiles; i++)
-			{	sprintf(buf1, "file%d.txt", i);
-				if (debug) printf("\n  fmsDefineFile(\"%s\")", buf1);
-				try(fmsDefineFile(buf1, ARCHIVE));
-			}
-			// go up one directory
-			strcpy(buf2, "..");
-			printf("\n  fmsChangeDir(\"%s\")", buf2);
-			try(fmsChangeDir(buf2));
-			// try to delete directory
-			printf("\n  fmsDeleteFile(\"%s\")", buf);
-			if ((error = fmsDeleteFile(buf)) != ERR69)
-				FERROR("\nFailed fmsDeleteFile(\"%s\")",buf,error);
-			printf(" Can Not Delete... Good!");
-			// go back into directory
-			printf("\n  fmsChangeDir(\"%s\")", buf);
-			try(fmsChangeDir(buf));
-			// delete all the files
-			printf("\n  Delete %d files...", numFiles);
-			for (i=0; i<numFiles; i++)
-			{	sprintf(buf1, "file%d.txt", i);
-				if (debug) printf("\n  fmsDeleteFile(\"%s\")", buf1);
-				try(fmsDeleteFile(buf1));
-			}
-			// go up one directory again
-			strcpy(buf2, "..");
-			printf("\n  fmsChangeDir(\"%s\")", buf2);
-			try(fmsChangeDir(buf2));
-			// try to delete directory again
-			printf("\n  fmsDeleteFile(\"%s\")", buf);
-			try(fmsDeleteFile(buf));
-			break;
-		}
+	case 5:
+	{
+			  printf("\nRunning Test 5...");
+			  // define test directory
+			  strcpy(buf, "TESTDIR");
+			  printf("\n  fmsMakeDirectory(\"%s\")", buf);
+			  try(fmsDefineFile(buf, DIRECTORY));
+			  // change directories
+			  printf("\n  fmsChangeDir(\"%s\")", buf);
+			  try(fmsChangeDir(buf));
+			  // create numFiles files in current directory
+			  printf("\n  Define %d files...", numFiles);
+			  for (i = 0; i<numFiles; i++)
+			  {
+				  sprintf(buf1, "file%d.txt", i);
+				  if (debug) printf("\n  fmsDefineFile(\"%s\")", buf1);
+				  try(fmsDefineFile(buf1, ARCHIVE));
+			  }
+			  // go up one directory
+			  strcpy(buf2, "..");
+			  printf("\n  fmsChangeDir(\"%s\")", buf2);
+			  try(fmsChangeDir(buf2));
+			  // try to delete directory
+			  printf("\n  fmsDeleteFile(\"%s\")", buf);
+			  if ((error = fmsDeleteFile(buf)) != ERR69)
+				  FERROR("\nFailed fmsDeleteFile(\"%s\")", buf, error);
+			  printf(" Can Not Delete... Good!");
+			  // go back into directory
+			  printf("\n  fmsChangeDir(\"%s\")", buf);
+			  try(fmsChangeDir(buf));
+			  // delete all the files
+			  printf("\n  Delete %d files...", numFiles);
+			  for (i = 0; i<numFiles; i++)
+			  {
+				  sprintf(buf1, "file%d.txt", i);
+				  if (debug) printf("\n  fmsDeleteFile(\"%s\")", buf1);
+				  try(fmsDeleteFile(buf1));
+			  }
+			  // go up one directory again
+			  strcpy(buf2, "..");
+			  printf("\n  fmsChangeDir(\"%s\")", buf2);
+			  try(fmsChangeDir(buf2));
+			  // try to delete directory again
+			  printf("\n  fmsDeleteFile(\"%s\")", buf);
+			  try(fmsDeleteFile(buf));
+			  break;
+	}
 
-		case 6:
-		{
-			// delete numFiles files
-			printf("\nRunning Test 6...");
-			printf("\n  Delete %d files...", numFiles);
-			for (i=0; i<numFiles; i++)
-			{	sprintf(buf, "file%d.txt", i);
-				if (debug) printf("\n  fmsDeleteFile(\"%s\")", buf);
-				try(fmsDeleteFile(buf));
-			}
+	case 6:
+	{
+			  // delete numFiles files
+			  printf("\nRunning Test 6...");
+			  printf("\n  Delete %d files...", numFiles);
+			  for (i = 0; i<numFiles; i++)
+			  {
+				  sprintf(buf, "file%d.txt", i);
+				  if (debug) printf("\n  fmsDeleteFile(\"%s\")", buf);
+				  try(fmsDeleteFile(buf));
+			  }
 
-			// delete numDirs directories
-			printf("\n  Delete %d directories...", numDirs);
-			for (i=0; i<numDirs; i++)
-			{	sprintf(buf, "dfile%d", i);
-				if (debug) printf("\n  fmsDeleteFile(\"%s\")", buf);
-				try(fmsDeleteFile(buf));
-			}
-			break;
-		}
+			  // delete numDirs directories
+			  printf("\n  Delete %d directories...", numDirs);
+			  for (i = 0; i<numDirs; i++)
+			  {
+				  sprintf(buf, "dfile%d", i);
+				  if (debug) printf("\n  fmsDeleteFile(\"%s\")", buf);
+				  try(fmsDeleteFile(buf));
+			  }
+			  break;
+	}
 
-		default:
-			printf("\nInvalid test!");
+	default:
+		printf("\nInvalid test!");
 	}
 	return 0;
 } // end finalTest
@@ -1352,7 +1361,7 @@ int lastFD;										// fileid of last opened file
 int P6_open(int argc, char* argv[])		// open file
 {
 	int error, mode;
-	char* omode[] = {"read", "write", "append", "r/w"};
+	char* omode[] = { "read", "write", "append", "r/w" };
 
 	if (argc < 3) mode = OPEN_READ;
 	else mode = INTEGER(argv[2]);
@@ -1369,7 +1378,7 @@ int P6_open(int argc, char* argv[])		// open file
 	printf("\nFileID = %d", lastFD);
 
 	SWAP;
-//	P6_fileSlots(0, (char**)0);
+	//	P6_fileSlots(0, (char**)0);
 	return 0;
 } // end P6_type
 
@@ -1535,19 +1544,19 @@ int P6_close(int argc, char* argv[])		// close file
 //
 void setDirTimeDate(DirEntry* dir)
 {
-   time_t a;
-   struct tm *b;
+	time_t a;
+	struct tm *b;
 
-   time(&a);
-   b = localtime(&a);
-   dir->date.year = b->tm_year + 1900 - 1980;
-   dir->date.month = b->tm_mon;
-   dir->date.day = b->tm_mday;
+	time(&a);
+	b = localtime(&a);
+	dir->date.year = b->tm_year + 1900 - 1980;
+	dir->date.month = b->tm_mon;
+	dir->date.day = b->tm_mday;
 
-   dir->time.hour = b->tm_hour;
-   dir->time.min = b->tm_min;
-   dir->time.sec = b->tm_sec;
-   return;
+	dir->time.hour = b->tm_hour;
+	dir->time.min = b->tm_min;
+	dir->time.sec = b->tm_sec;
+	return;
 } // end setDirTimeDate
 
 
@@ -1557,18 +1566,18 @@ void setDirTimeDate(DirEntry* dir)
 // Error processor
 void fmsError(int error)
 {
-   int i;
+	int i;
 
-   for (i=0; i<NUM_ERRORS; i++)
-   {
-      if (FMSErrors[i].error == error)
-      {
-         printf("\n%s", FMSErrors[i].error_msg);
-         return;
-      }
-   }
-   printf("\n%s %d", UNDEFINED_MSG, error);
-   return;
+	for (i = 0; i<NUM_ERRORS; i++)
+	{
+		if (FMSErrors[i].error == error)
+		{
+			printf("\n%s", FMSErrors[i].error_msg);
+			return;
+		}
+	}
+	printf("\n%s %d", UNDEFINED_MSG, error);
+	return;
 } // end fmsError
 
 
@@ -1596,8 +1605,8 @@ int isValidFileName(char* fileName)
 	// check for double period
 	if (s = strchr(fileName, '.'))
 	{
-		if (strchr(s+1, '.')) return 0;			// more than 1 '.'
-		if (strlen(s+1) > 3) return 0;			// too long of extension
+		if (strchr(s + 1, '.')) return 0;			// more than 1 '.'
+		if (strlen(s + 1) > 3) return 0;			// too long of extension
 		if ((strlen(fileName) - strlen(s)) <= 8) return 1;
 		else return -1;
 	}
@@ -1611,31 +1620,31 @@ int isValidFileName(char* fileName)
 // ***************************************************************************************
 int fmsMask(char* mask, char* name, char* ext)
 {
-   int i,j;
-   // check for ..
-   if (!strcmp(mask, ".."))
-      if (!strncmp(name, "..", 2)) return 1;
-      else return 0;
+	int i, j;
+	// check for ..
+	if (!strcmp(mask, ".."))
+	if (!strncmp(name, "..", 2)) return 1;
+	else return 0;
 
-   // look thru name
-   for (i=0,j=0; j<8; i++,j++)
-   {
-      if (mask[i] == '*') {i++; break;}
-      if ((mask[i] == '.') && (name[j] == ' ')) {i++; break;}
-      if ((mask[i] == '?') && (name[j] != ' ')) continue;
-      if (!mask[i] && (name[j] == ' ') && (ext[0] == ' ')) return 1;
-      if ((mask[i] != toupper(name[j])) && (mask[i] != tolower(name[j]))) return 0;
-   }
-   while (mask[i] == '.') i++;
-   // check extension
-   for (j=0; j<3; i++,j++)
-   {
-      if (mask[i] == '*') return 1;
-      if (!mask[i] && (ext[j] == ' ')) return 1;
-      if ((mask[i] == '?') && (ext[i] != ' ')) continue;
-      if ((mask[i] != toupper(ext[j])) && (mask[i] != tolower(ext[j]))) return 0;
-   }
-   return 1;
+	// look thru name
+	for (i = 0, j = 0; j<8; i++, j++)
+	{
+		if (mask[i] == '*') { i++; break; }
+		if ((mask[i] == '.') && (name[j] == ' ')) { i++; break; }
+		if ((mask[i] == '?') && (name[j] != ' ')) continue;
+		if (!mask[i] && (name[j] == ' ') && (ext[0] == ' ')) return 1;
+		if ((mask[i] != toupper(name[j])) && (mask[i] != tolower(name[j]))) return 0;
+	}
+	while (mask[i] == '.') i++;
+	// check extension
+	for (j = 0; j<3; i++, j++)
+	{
+		if (mask[i] == '*') return 1;
+		if (!mask[i] && (ext[j] == ' ')) return 1;
+		if ((mask[i] == '?') && (ext[i] != ' ')) continue;
+		if ((mask[i] != toupper(ext[j])) && (mask[i] != tolower(ext[j]))) return 0;
+	}
+	return 1;
 } // end fmsMask
 
 
@@ -1649,9 +1658,9 @@ int fmsGetDirEntry(char* fileName, DirEntry* dirEntry)
 //
 //    ERR61 = File Not Defined
 {
-   int error, index = 0;
+	int error, index = 0;
 	//if (isValidFileName(fileName) < 1) return ERR50;
-   error = fmsGetNextDirEntry(&index, fileName, dirEntry, CDIR);
+	error = fmsGetNextDirEntry(&index, fileName, dirEntry, CDIR);
 	return (error ? ((error == ERR67) ? ERR61 : error) : 0);
 } // end fmsGetDirEntry
 
@@ -1684,11 +1693,11 @@ int fmsGetNextDirEntry(int *dirNum, char* mask, DirEntry* dirEntry, int dir)
 	int loop = *dirNum / ENTRIES_PER_SECTOR;
 	int dirCluster = dir;
 
-	while(1)
+	while (1)
 	{	// load directory sector
 		if (dir)
 		{	// sub directory
-			while(loop--)
+			while (loop--)
 			{
 				dirCluster = getFatEntry(dirCluster, FAT1);
 				if (dirCluster == FAT_EOC) return ERR67;
@@ -1707,7 +1716,7 @@ int fmsGetNextDirEntry(int *dirNum, char* mask, DirEntry* dirEntry, int dir)
 		if (error = fmsReadSector(buffer, dirSector)) return error;
 
 		// find next matching directory entry
-		while(1)
+		while (1)
 		{	// read directory entry
 			dirIndex = *dirNum % ENTRIES_PER_SECTOR;
 			memcpy(dirEntry, &buffer[dirIndex * sizeof(DirEntry)], sizeof(DirEntry));
@@ -1721,7 +1730,7 @@ int fmsGetNextDirEntry(int *dirNum, char* mask, DirEntry* dirEntry, int dir)
 		}
 		// next directory sector/cluster
 		loop = 1;
-   }
+	}
 	return 0;
 } // end fmsGetNextDirEntry
 
@@ -1737,28 +1746,28 @@ int fmsChangeDir(char* dirName)
 //	Verify that dirname is a valid directory name in the current directory.
 //	Return 0 for success, otherwise, return the error number.
 {
-   int i, error;
+	int i, error;
 	DirEntry dirEntry;
 
 	// need to allow for . and ..
 	//if (isValidFileName(dirName) < 1) return ERR50;
-   if ((error = fmsGetDirEntry(dirName, &dirEntry))) return error;
-   if (dirEntry.attributes != DIRECTORY) return ERR55;
-   CDIR = dirEntry.startCluster;
+	if ((error = fmsGetDirEntry(dirName, &dirEntry))) return error;
+	if (dirEntry.attributes != DIRECTORY) return ERR55;
+	CDIR = dirEntry.startCluster;
 
 	// keep track of path name
 	if (!strcmp(dirName, ".")) return 0;
 	if (!strcmp(dirName, ".."))
 	{	// drop last directory
-		for (i=strlen(dirPath)-1; i>0; i--) if (dirPath[i] == '\\') break;
-		if (dirPath[i-1] == ':') i++;
+		for (i = strlen(dirPath) - 1; i>0; i--) if (dirPath[i] == '\\') break;
+		if (dirPath[i - 1] == ':') i++;
 		dirPath[i] = '\0';
 		return 0;
 	}
 	// add new path
-	if (dirPath[strlen(dirPath)-1] != '\\') strcat(dirPath, "\\");
+	if (dirPath[strlen(dirPath) - 1] != '\\') strcat(dirPath, "\\");
 	strcat(dirPath, dirName);
-   return 0;
+	return 0;
 } // end fmsChangeDir
 
 
@@ -1808,22 +1817,22 @@ int fmsMount(char* fileName, void* ramDisk)
 // This function loads a RAM disk image from a file.
 //	The parameter fileName is the file path name of the disk image.
 //	The parameter ramDisk is a pointer to a character array whose
-//    size is equal to a 1.4 mb floppy disk (2849 ´ 512 bytes).
+//    size is equal to a 1.4 mb floppy disk (2849 ï¿½ 512 bytes).
 //	Return 0 for success, otherwise, return the error number
 {
-   FILE* fp;
-   fp = fopen(fileName, "rb");
-   if (fp)
-   {
-      fread(ramDisk, sizeof(char), SECTORS_PER_DISK * BYTES_PER_SECTOR, fp);
-   }
-   else return -1;
-   fclose(fp);
+	FILE* fp;
+	fp = fopen(fileName, "rb");
+	if (fp)
+	{
+		fread(ramDisk, sizeof(char), SECTORS_PER_DISK * BYTES_PER_SECTOR, fp);
+	}
+	else return -1;
+	fclose(fp);
 	// copy FAT table to memory
 	memcpy(FAT1, &RAMDisk[1 * BYTES_PER_SECTOR], NUM_FAT_SECTORS * BYTES_PER_SECTOR);
 	memcpy(FAT2, &RAMDisk[10 * BYTES_PER_SECTOR], NUM_FAT_SECTORS * BYTES_PER_SECTOR);
 	diskMounted = 1;				// disk has been mounted
- 	strcpy(dirPath, fileName);
+	strcpy(dirPath, fileName);
 	strcat(dirPath, ":\\");
 	return 0;
 } // end fmsMount
@@ -1837,7 +1846,7 @@ int fmsUnMount(char* fileName, void* ramDisk)
 // This function unloads your Project 5 RAM disk image to file computer file.
 // The parameter fileName is the file path name of the disk image.
 // The pointer parameter ramDisk points to a character array whose size is equal to a 1.4
-// mb floppy disk (2849 ´ 512 bytes).
+// mb floppy disk (2849 ï¿½ 512 bytes).
 // Return 0 for success; otherwise, return the error number.
 {
 	diskMounted = 0;							// unmount disk
@@ -1856,9 +1865,9 @@ int fmsReadSector(void* buffer, int sectorNumber)
 // Sectors are 512 bytes.
 //	Return 0 for success; otherwise, return an error number.
 {
-   memcpy(buffer, &RAMDisk[sectorNumber * BYTES_PER_SECTOR], BYTES_PER_SECTOR);
-   ++sectorReads;
-   return 0;
+	memcpy(buffer, &RAMDisk[sectorNumber * BYTES_PER_SECTOR], BYTES_PER_SECTOR);
+	++sectorReads;
+	return 0;
 } // end fmsReadSector
 
 
@@ -1885,11 +1894,13 @@ void setFatEntry(int FATindex, unsigned short FAT12ClusEntryVal, unsigned char* 
 	int FATData = *((unsigned short*)&FAT[FATOffset]);
 	FATData = BigEndian(FATData);
 	if (FATindex % 2 == 0)						// If the index is even
-	{	FAT12ClusEntryVal &= 0x0FFF;			// mask to 12 bits
-	FATData &= 0xF000;							// mask complement
+	{
+		FAT12ClusEntryVal &= 0x0FFF;			// mask to 12 bits
+		FATData &= 0xF000;							// mask complement
 	}
 	else												// Index is odd
-	{	FAT12ClusEntryVal <<= 4; 				// move 12-bits high
+	{
+		FAT12ClusEntryVal <<= 4; 				// move 12-bits high
 		FATData &= 0x000F;						// mask complement
 	}
 	// Update FAT entry value in the FAT table
@@ -1911,15 +1922,15 @@ unsigned short getFatEntry(int FATindex, unsigned char* FATtable)
 	{
 		// Pull out a unsigned short from a unsigned char array
 		FATEntryCode = *((unsigned short *)&FATtable[FatOffset]);
-      FATEntryCode = BigEndian(FATEntryCode);
+		FATEntryCode = BigEndian(FATEntryCode);
 		FATEntryCode >>= 4;   					// Extract the high-order 12 bits
 	}
 	else												// If the index is even
 	{
 		// Pull out a unsigned short from a unsigned char array
 		FATEntryCode = *((unsigned short *)&FATtable[FatOffset]);
-      FATEntryCode = BigEndian(FATEntryCode);
-      FATEntryCode &= 0x0fff;    			// Extract the low-order 12 bits
+		FATEntryCode = BigEndian(FATEntryCode);
+		FATEntryCode &= 0x0fff;    			// Extract the low-order 12 bits
 	}
 	return FATEntryCode;
 } // end GetFatEntry
